@@ -3,11 +3,14 @@ namespace ideasonpurpose\SVG;
 
 /**
  * Collection of reusable, optimized SVG elements.
+ *
+ * TODO: Handle missing SVGs
+ * TODO: Load SVGs from the filesystem and convert them to symbols
  */
 class SVG
 {
     // Test circle
-    public static $circle = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="100"/></svg>';
+    public static $test = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="100"/></svg>';
 
     private $lib = [];
 
@@ -22,10 +25,12 @@ class SVG
      * Copies static variables into $this->lib
      * This is largely for compatibility since we've previously been echoing static variables as needed
      * In the future, this can be refactored away and SVG content can be directly entered into $this->lib
+     *
+     * Note: `get_class_vars(get_called_class())` pulls static vars in from the child class
      */
     private function libFill()
     {
-        $static_vars = get_class_vars(__CLASS__);
+        $static_vars = get_class_vars(get_called_class());
         foreach ($static_vars as $key => $svg) {
             if (is_string($svg) && substr($svg, 0, 4) == '<svg') {
                 $this->lib[$key] = preg_replace(
@@ -54,7 +59,6 @@ class SVG
      */
     public function dumpSymbols()
     {
-        // error_log(json_encode($this->inUse, JSON_PRETTY_PRINT));
         if (count($this->inUse)) {
             $this->inUse = array_unique($this->inUse);
             sort($this->inUse);
