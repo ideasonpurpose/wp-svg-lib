@@ -1,0 +1,16 @@
+{
+  "name": "svg-lib",
+  "version": "0.1.0",
+  "description": "Utilities for collecting and reusing inline SVG components",
+  "main": "composer.json",
+  "author": "Joe Maller <joe@ideasonpurpose.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+"prettier": "prettier --write"
+  },
+  "devDependencies": {
+    "@prettier/plugin-php": "^0.2.1",
+    "prettier": "prettier/prettier"
+  }
+}

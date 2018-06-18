@@ -1,0 +1,17 @@
+{
+  "name": "ideasonpurpose/svg-lib",
+  "description": "Utilities for collecting and reusing inline SVG components",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Joe Maller",
+      "email": "joe@ideasonpurpose.com",
+      "homepage": "https://www.ideasonpurpose.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "ideasonpurpose\\SVG\\": "src"
+    }
+  }
+}
