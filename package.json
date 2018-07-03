@@ -1,13 +1,13 @@
 {
-  "name": "svg-lib",
+  "name": "wp-svg-lib",
   "version": "0.1.0",
-  "description": "Utilities for collecting and reusing inline SVG components",
-  "main": "composer.json",
-  "author": "Joe Maller <joe@ideasonpurpose.com>",
-  "license": "MIT",
   "private": true,
+  "description": "Utilities for collecting and reusing inline SVG components",
+  "license": "MIT",
+  "author": "Joe Maller <joe@ideasonpurpose.com>",
+  "main": "composer.json",
   "scripts": {
-"prettier": "prettier --write"
+    "prettier": "prettier --write"
   },
   "devDependencies": {
     "@prettier/plugin-php": "^0.2.1",
