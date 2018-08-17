@@ -73,8 +73,10 @@ class SVG
             );
         } else {
             if (is_user_logged_in()) {
-                echo "\n<!-- NO SVGs IN USE -->\n";
-                printf("\n<!-- message from %s -->\n\n", __FILE__);
+                printf(
+                    "\n<!-- NO SVGs IN USE -->\n<!-- message from %s -->\n\n",
+                    __FILE__
+                );
             }
         }
     }
