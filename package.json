@@ -10,7 +10,7 @@
     "prettier": "prettier --write"
   },
   "devDependencies": {
-    "@prettier/plugin-php": "^0.6.0",
-    "prettier": "^1.14.2"
+    "@prettier/plugin-php": "^0.12.0",
+    "prettier": "^1.19.1"
   }
 }
