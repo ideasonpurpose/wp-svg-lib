@@ -15,14 +15,38 @@ class SVG
     public static $arrow = '<svg width="25px" height="10px" viewBox="0 0 25 10" xmlns="http://www.w3.org/2000/svg"><symbol viewBox="0 0 25 10"><g stroke="none" stroke-width="1" fill-rule="evenodd"><path d="M0,5.56818182 L0.0132296399,4.40340909 C12.5986928,4.48193734 18.8549727,4.48193734 18.7820692,4.40340909 L18.7820692,0 L25,4.98579545 L18.7688396,10 L18.7820692,5.56818182 L0,5.56818182 Z"></path></g></symbol></svg>';
 
     private $lib = [];
+    public $libDir = null;
 
-    public function __construct()
+    public function __construct($libDir = null)
     {
         $this->inUse = [];
+        $this->libDir = $libDir ? $libDir : $this->libDir;
+        $this->loadFromDirectory();
         $this->libFill();
         add_action('wp_footer', [$this, 'dumpSymbols']);
     }
 
+    /**
+     * Checks the `$this->libDir` for SVG files and includes
+     * any found using the files' baseName as the storage key.
+     */
+    public function loadFromDirectory()
+    {
+        if ($this->libDir && file_exists($this->libDir) && is_dir($this->libDir)) {
+            $iterator = new \FilesystemIterator($this->libDir);
+            foreach ($iterator as $file) {
+                if (strtolower($file->getExtension()) === 'svg') {
+                    $key = strtolower($file->getBasename('.' . $file->getExtension()));
+
+                    $this->lib[$key] = preg_replace(
+                        ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
+                        ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
+                        file_get_contents($file->getRealPath()),
+                    );
+                }
+            }
+        }
+    }
     /**
      * Copies static variables into $this->lib
      * This is largely for compatibility since we've previously been echoing static variables as needed
@@ -38,7 +62,7 @@ class SVG
                 $this->lib[$key] = preg_replace(
                     ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
                     ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
-                    $svg
+                    $svg,
                 );
             }
         }
@@ -46,14 +70,16 @@ class SVG
 
     /**
      * Records a symbol as being used, then returns an SVG "use" reference to that symbol
+     *
+     * Writes an error message in an HTML comment if an SVG can not be found.
      */
     public function get($key)
     {
+        if (!array_key_exists($key, $this->lib)) {
+            return "\n<!-- SVG Lib Error: The key '$key' does not match any registered SVGs -->\n\n";
+        }
         array_push($this->inUse, $key);
-        return sprintf(
-            '<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>',
-            $key
-        );
+        return sprintf('<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>', $key);
     }
 
     /**
@@ -69,14 +95,11 @@ class SVG
             }, $this->inUse);
             printf(
                 "<svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>\n%s\n</svg>\n",
-                implode("\n", $symbols)
+                implode("\n", $symbols),
             );
         } else {
             if (is_user_logged_in()) {
-                printf(
-                    "\n<!-- NO SVGs IN USE -->\n<!-- message from %s -->\n\n",
-                    __FILE__
-                );
+                printf("\n<!-- NO SVGs IN USE -->\n<!-- message from %s -->\n\n", __FILE__);
             }
         }
     }
