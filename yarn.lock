@@ -2,32 +2,44 @@
 # yarn lockfile v1
 
 
-"@prettier/plugin-php@^0.6.0":
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/@prettier/plugin-php/-/plugin-php-0.6.0.tgz#bc3458168dec217fc869db7b0950eb7da8cb0ec1"
+"@prettier/plugin-php@^0.12.0":
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/@prettier/plugin-php/-/plugin-php-0.12.0.tgz#d70037c8a7fb46ed47de8bee47d73c2e03cec769"
   dependencies:
-    mem "^3.0.1"
-    php-parser "3.0.0-alpha2"
+    linguist-languages "^7.5.1"
+    mem "^6.0.1"
+    php-parser "github:glayzzle/php-parser#prettier"
 
-mem@^3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/mem/-/mem-3.0.1.tgz#152410d0d7e835e4a4363e626238d9e5be3d6f5a"
+linguist-languages@^7.5.1:
+  version "7.7.0"
+  resolved "https://registry.yarnpkg.com/linguist-languages/-/linguist-languages-7.7.0.tgz#c069731f8b307ce301980a4bac4b81bf06a2c351"
+
+map-age-cleaner@^0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/map-age-cleaner/-/map-age-cleaner-0.1.3.tgz#7d583a7306434c055fe474b0f45078e6e1b4b92a"
   dependencies:
-    mimic-fn "^1.0.0"
-    p-is-promise "^1.1.0"
+    p-defer "^1.0.0"
 
-mimic-fn@^1.0.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/mimic-fn/-/mimic-fn-1.2.0.tgz#820c86a39334640e99516928bd03fca88057d022"
+mem@^6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/mem/-/mem-6.0.1.tgz#3f8ad1b0f8c4e00daf07f104e95b9d78131d7908"
+  dependencies:
+    map-age-cleaner "^0.1.3"
+    mimic-fn "^3.0.0"
 
-p-is-promise@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/p-is-promise/-/p-is-promise-1.1.0.tgz#9c9456989e9f6588017b0434d56097675c3da05e"
+mimic-fn@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/mimic-fn/-/mimic-fn-3.0.0.tgz#76044cfa8818bbf6999c5c9acadf2d3649b14b4b"
 
-php-parser@3.0.0-alpha2:
-  version "3.0.0-alpha2"
-  resolved "https://registry.yarnpkg.com/php-parser/-/php-parser-3.0.0-alpha2.tgz#6dc391cac809e541738f1c73f6ecb9d840a38840"
+p-defer@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/p-defer/-/p-defer-1.0.0.tgz#9f6eb182f6c9aa8cd743004a7d4f96b196b0fb0c"
 
-prettier@^1.14.2:
-  version "1.14.2"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.14.2.tgz#0ac1c6e1a90baa22a62925f41963c841983282f9"
+"php-parser@github:glayzzle/php-parser#prettier":
+  version "3.0.0-prerelease.9"
+  uid "3279b7ee9bd78b914b5b840edc749eee0fabbfd8"
+  resolved "https://codeload.github.com/glayzzle/php-parser/tar.gz/3279b7ee9bd78b914b5b840edc749eee0fabbfd8"
+
+prettier@^1.19.1:
+  version "1.19.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.19.1.tgz#f7d7f5ff8a9cd872a7be4ca142095956a60797cb"
