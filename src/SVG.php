@@ -23,6 +23,11 @@ class SVG
         $this->libDir = $libDir ? $libDir : $this->libDir;
         $this->loadFromDirectory();
         $this->libFill();
+
+        add_action('pre_get_posts', function () {
+            set_query_var('SVG', $this);
+        });
+
         add_action('wp_footer', [$this, 'dumpSymbols']);
     }
 
