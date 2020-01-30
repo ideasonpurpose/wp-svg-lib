@@ -38,10 +38,12 @@ class SVG
     public function loadFromDirectory()
     {
         if ($this->libDir && file_exists($this->libDir) && is_dir($this->libDir)) {
-            $iterator = new \FilesystemIterator($this->libDir);
-            foreach ($iterator as $file) {
+            $iterator = new \RecursiveDirectoryIterator($this->libDir);
+            foreach (new \RecursiveIteratorIterator($iterator) as $file) {
                 if (strtolower($file->getExtension()) === 'svg') {
-                    $key = strtolower($file->getBasename('.' . $file->getExtension()));
+                    $key = str_replace($this->libDir, '', $file->getPathname());
+                    $key = preg_replace('/\.svg$/i', '', $key);
+                    $key = strtolower(ltrim($key, '/'));
 
                     $this->lib[$key] = preg_replace(
                         ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
