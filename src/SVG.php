@@ -54,6 +54,57 @@ class SVG
             }
         }
     }
+
+    /**
+     * Alias for `debug`
+     */
+    public function directory()
+    {
+        $this->debug();
+    }
+
+    /**
+     * prints a table of registered SVGs
+     */
+    public function debug()
+    {
+        $id = 'debug-' . md5(microtime(true));
+        echo "<style>
+            #$id {
+                display: grid;
+                grid-template-columns: repeat(2, 36px auto);
+                align-items: center;
+                justify-content: center;
+                margin: 1rem auto;
+                padding: 1rem;
+
+                color: #c00;
+                font-size: 14px;
+                font-family: monospace;
+                white-space: nowrap;
+                column-gap: 6px;
+
+                background: #eee;
+
+                row-gap: 6px;
+            }
+            #$id svg {
+                color: magenta;
+                width: 36px;
+                height: 36px;
+                background: #ccc;
+                fill: #555;
+            }
+            </style>";
+
+        echo '<div id="' . $id . '" >';
+        foreach ($this->lib as $key => $svg) {
+            printf('<div>%s</div>', $this->get($key));
+            echo "<div style='color: #bbb'>\$SVG->get(\"<span style='color:#c00'>$key</span>\")</div>";
+        }
+        echo '</div>';
+    }
+
     /**
      * Copies static variables into $this->lib
      * This is largely for compatibility since we've previously been echoing static variables as needed
