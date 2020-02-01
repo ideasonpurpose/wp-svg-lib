@@ -134,6 +134,7 @@ class SVG
     public function get($key)
     {
         if (!array_key_exists($key, $this->lib)) {
+            error_log("SVG Lib Error: The key '$key' does not match any registered SVGs");
             return "\n<!-- SVG Lib Error: The key '$key' does not match any registered SVGs -->\n\n";
         }
         array_push($this->inUse, $key);
