@@ -48,7 +48,7 @@ class SVG
                     $this->lib[$key] = preg_replace(
                         ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
                         ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
-                        file_get_contents($file->getRealPath()),
+                        file_get_contents($file->getRealPath())
                     );
                 }
             }
@@ -120,7 +120,7 @@ class SVG
                 $this->lib[$key] = preg_replace(
                     ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
                     ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
-                    $svg,
+                    $svg
                 );
             }
         }
@@ -154,7 +154,7 @@ class SVG
             }, $this->inUse);
             printf(
                 "<svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>\n%s\n</svg>\n",
-                implode("\n", $symbols),
+                implode("\n", $symbols)
             );
         } else {
             if (is_user_logged_in()) {
