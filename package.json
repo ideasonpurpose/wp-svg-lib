@@ -1,6 +1,6 @@
 {
   "name": "wp-svg-lib",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "private": true,
   "description": "Utilities for collecting and reusing inline SVG components",
   "license": "MIT",
@@ -29,7 +29,10 @@
     "prettier": "^2.0.4",
     "version-everything": "^0.6.0"
   },
-  "version-everything": [
-    "README.md"
-  ]
+  "version-everything": {
+    "files": [
+      "README.md",
+      "composer.json"
+    ]
+  }
 }
