@@ -7,10 +7,29 @@
   "author": "Joe Maller <joe@ideasonpurpose.com>",
   "main": "composer.json",
   "scripts": {
-    "prettier": "prettier --write"
+    "prettier": "prettier --write",
+    "version": "version-everything && git add -u"
   },
-  "devDependencies": {
-    "@prettier/plugin-php": "^0.12.0",
-    "prettier": "^1.19.1"
-  }
+  "prettier": {
+    "overrides": [
+      {
+        "files": "*.php",
+        "options": {
+          "phpVersion": "7.2",
+          "printWidth": 120,
+          "singleQuote": true,
+          "tabWidth": 4,
+          "trailingCommaPHP": true
+        }
+      }
+    ]
+  },
+  "dependencies": {
+    "@prettier/plugin-php": "^0.14.0",
+    "prettier": "^2.0.4",
+    "version-everything": "^0.6.0"
+  },
+  "version-everything": [
+    "README.md"
+  ]
 }
