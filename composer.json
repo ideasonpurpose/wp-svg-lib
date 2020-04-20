@@ -13,5 +13,6 @@
     "psr-4": {
       "ideasonpurpose\\SVG\\": "src"
     }
-  }
+  },
+  "version": "0.3.0"
 }
