@@ -11,7 +11,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "ideasonpurpose\\SVG\\": "src"
+      "IdeasOnPurpose\\": "src"
     }
   },
   "version": "0.3.0"

@@ -1,5 +1,5 @@
 <?php
-namespace ideasonpurpose\SVG;
+namespace IdeasOnPurpose;
 
 /**
  * Collection of reusable, optimized SVG elements.
