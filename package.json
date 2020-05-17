@@ -8,7 +8,7 @@
   "main": "composer.json",
   "scripts": {
     "prettier": "prettier --write",
-    "version": "version-everything && git add -u"
+    "version": "version-everything && auto-changelog && git add -u"
   },
   "prettier": {
     "overrides": [
@@ -26,8 +26,9 @@
   },
   "dependencies": {
     "@prettier/plugin-php": "^0.14.0",
-    "prettier": "^2.0.4",
-    "version-everything": "^0.6.0"
+    "auto-changelog": "^2.0.0",
+    "prettier": "^2.0.5",
+    "version-everything": "^0.6.3"
   },
   "version-everything": {
     "files": [
