@@ -43,7 +43,8 @@ class SVG
                 if (strtolower($file->getExtension()) === 'svg') {
                     $key = str_replace($this->libDir, '', $file->getPathname());
                     $key = preg_replace('/\.svg$/i', '', $key);
-                    $key = strtolower(ltrim($key, '/'));
+                    $key = ltrim($key, '/');
+                    // $key = strtolower(ltrim($key, '/'));
 
                     $this->lib[$key] = preg_replace(
                         ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
