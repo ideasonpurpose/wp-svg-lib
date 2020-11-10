@@ -33,8 +33,9 @@ jobs:
     - name: Run test suite
       run: vendor/bin/phpunit
 
-    - name: Coveralls
-      uses: coverallsapp/github-action@v1.1.2
-      with:
-        github-token: ${{ secrets.COVERALLS_TOKEN }}
-        path-to-lcov: ./coverage.xml
+    - name: Upload to Coveralls
+      env: 
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+      run: |
+        composer global require twinh/php-coveralls
+        php-coveralls --coverage_clover=coverage.xml -v
