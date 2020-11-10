@@ -56,6 +56,61 @@ class SVG
     }
 
     /**
+     * Check if SVG exists and prints debugging messages if missing
+     */
+    private function hasSVG($key)
+    {
+        if (!array_key_exists($key, $this->lib)) {
+            error_log("SVG Lib Error: The key '$key' does not match any registered SVGs");
+            echo "\n<!-- SVG Lib Error: The key '$key' does not match any registered SVGs -->\n\n";
+            return false;
+        }
+        return true;
+    }
+
+    public function __get($name)
+    {
+        return $this->embed($name);
+    }
+
+    /**
+     * Inline SVGs directly by name
+     */
+    public function embed($name)
+    {
+        if ($this->hasSVG($name)) {
+            return $this->lib[$name];
+        }
+    }
+
+    /**
+     * include SVGs as linked symbols
+     * This replaces the legacy SVG::get method
+     */
+    public function use($name)
+    {
+        if ($this->hasSVG($name)) {
+            array_push($this->inUse, $name);
+            return sprintf(
+                '<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>',
+                $name
+            );
+        }
+    }
+
+    /**
+     * Legacy method for including SVGs as linked symbols. Now an alias
+     * for the SVG::use method.
+     *
+     * DEPRECATED
+     */
+    public function get($name)
+    {
+        echo "\n\n<!-- The get method is deprecated. Switch to `use` instead. --> ";
+        return $this->use($name);
+    }
+
+    /**
      * Alias for `debug`
      * DEPRECATED
      */
@@ -126,21 +181,6 @@ class SVG
                 );
             }
         }
-    }
-
-    /**
-     * Records a symbol as being used, then returns an SVG "use" reference to that symbol
-     *
-     * Writes an error message in an HTML comment if an SVG can not be found.
-     */
-    public function get($key)
-    {
-        if (!array_key_exists($key, $this->lib)) {
-            error_log("SVG Lib Error: The key '$key' does not match any registered SVGs");
-            return "\n<!-- SVG Lib Error: The key '$key' does not match any registered SVGs -->\n\n";
-        }
-        array_push($this->inUse, $key);
-        return sprintf('<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>', $key);
     }
 
     /**

@@ -1,7 +1,8 @@
 <?php
 
+namespace IdeasOnPurpose;
+
 use PHPUnit\Framework\TestCase;
-use IdeasOnPurpose\SVG;
 
 /**
  * Mock add_action
@@ -22,9 +23,15 @@ function is_user_logged_in()
 }
 
 /**
+ * Mock error_log
+ */
+function error_log($err)
+{
+}
+
+/**
  * @covers \IdeasOnPurpose\SVG
  */
-
 final class SVGTest extends TestCase
 {
     protected function setUp(): void
@@ -32,14 +39,9 @@ final class SVGTest extends TestCase
         $this->SVG = new SVG(__DIR__ . '/fixtures');
     }
 
-    public function testWorking()
-    {
-        $this->assertEquals(true, true);
-    }
-
     public function testLib()
     {
-        $reflector = new ReflectionClass($this->SVG);
+        $reflector = new \ReflectionClass($this->SVG);
         $prop = $reflector->getProperty('lib');
         $prop->setAccessible(true);
         $lib = $prop->getValue($this->SVG);
@@ -53,17 +55,58 @@ final class SVGTest extends TestCase
     }
 
     /**
+     * Test magic methods for embedding SVGs
+     */
+    public function testMagicMethods()
+    {
+        $arrow = $this->SVG->arrow;
+        $this->assertStringContainsString('<svg', $arrow);
+        \ob_start();
+        $nope = $this->SVG->nope;
+        $this->assertNull($nope);
+        ob_end_clean();
+    }
+
+    public function testEmbed()
+    {
+        $arrow = $this->SVG->embed('arrow');
+        $this->assertStringContainsString('<svg', $arrow);
+
+        ob_start();
+        $nope = $this->SVG->embed('nope');
+        $this->assertNull($nope);
+        ob_end_clean();
+    }
+
+    public function testUse()
+    {
+        $arrow = $this->SVG->use('arrow');
+        $this->assertStringContainsString('<svg', $arrow);
+        $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow);
+
+        ob_start();
+        $nope = $this->SVG->use('nope');
+        $this->assertNull($nope);
+        ob_end_clean();
+    }
+
+    /**
      * This test confirms that the original implementation
      * of $SVG->get() still works correctly. This method was
      * moved renamed to $SVG->use()
      */
     public function testLegacyGet()
     {
+        ob_start();
         $arrow = $this->SVG->get('arrow');
+        $dump = ob_get_clean();
         $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow);
+        $this->assertStringContainsString('get method is deprecated', $dump);
 
+        ob_start();
         $nope = $this->SVG->get('nope');
-        $this->assertStringContainsStringIgnoringCase('SVG Lib Error', $nope);
+        $this->assertNull($nope);
+        ob_end_clean();
     }
 
     /**
@@ -102,7 +145,7 @@ final class SVGTest extends TestCase
     {
         global $user_logged_in;
 
-        $this->SVG->get('arrow');
+        $this->SVG->use('arrow');
 
         $user_logged_in = false;
         ob_start();
