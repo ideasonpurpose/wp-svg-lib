@@ -7,16 +7,23 @@
   "author": "Joe Maller <joe@ideasonpurpose.com>",
   "main": "composer.json",
   "scripts": {
-    "prettier": "prettier --write",
-    "version": "version-everything && auto-changelog && git add -u"
+    "test": "docker-compose run test",
+    "test:watch": "chokidar '{src,tests}/**/*.php' -c 'npm run test'",
+    "version": "version-everything && auto-changelog && git add -u",
+    "posttest": "replace '<file name=\"/app/' '<file name=\"./' coverage/cov.xml --silent"
   },
   "prettier": {
     "overrides": [
       {
+        "files": "*.md",
+        "options": {
+          "embeddedLanguageFormatting": "off"
+        }
+      },
+      {
         "files": "*.php",
         "options": {
-          "phpVersion": "7.2",
-          "printWidth": 120,
+          "printWidth": 100,
           "singleQuote": true,
           "tabWidth": 4,
           "trailingCommaPHP": true
@@ -24,10 +31,12 @@
       }
     ]
   },
-  "dependencies": {
-    "@prettier/plugin-php": "^0.14.0",
-    "auto-changelog": "^2.0.0",
-    "prettier": "^2.0.5",
+  "devDependencies": {
+    "@prettier/plugin-php": "^0.15.2",
+    "auto-changelog": "^2.2.1",
+    "chokidar-cli": "^2.1.0",
+    "prettier": "^2.1.2",
+    "replace": "^1.2.0",
     "version-everything": "^0.6.3"
   },
   "auto-changelog": {

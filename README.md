@@ -35,6 +35,8 @@ Ideally this library contains pre-optimized files. SVGs may be run through somet
 
 Filenames will be normalized to lowercase. All storage keys will be lowercase. So `Logo.svg` will be stored under the key `logo` and `Portrait.SVG` will be stored under `portrait`.
 
+The **posttest** script is a workaround to remap files paths because PHPUnit writes absolute paths into its coverage files. Because those paths are from inside a Docker image, those paths don't exist. I couldn't find another workaround which let me display coverage in VS Code.
+
 <!-- TOOD: Fix that? Seems pathetic -->
 
 [svgo]: https://www.npmjs.com/package/svgo
