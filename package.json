@@ -10,7 +10,7 @@
     "test": "docker-compose run test",
     "test:watch": "chokidar '{src,tests}/**/*.php' -c 'npm run test'",
     "version": "version-everything && auto-changelog && git add -u",
-    "posttest": "replace '<file name=\"/app/' '<file name=\"./' coverage/cov.xml --silent"
+    "posttest": "replace '<file name=\"/app/' '<file name=\"./' coverage.xml --silent"
   },
   "prettier": {
     "overrides": [

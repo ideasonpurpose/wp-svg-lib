@@ -24,7 +24,7 @@
             <directory suffix=".php">src</directory>
         </include>
         <report>
-            <clover outputFile="coverage/cov.xml"/>
+            <clover outputFile="coverage.xml"/>
             <text outputFile="php://stdout" />
         </report>
     </coverage>

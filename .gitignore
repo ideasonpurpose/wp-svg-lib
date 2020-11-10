@@ -1,4 +1,4 @@
 node_modules
 vendor
 .phpunit.cache
-coverage
+coverage.xml
