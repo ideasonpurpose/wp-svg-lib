@@ -66,11 +66,7 @@ The library keeps a record of which files have been included like this, then inj
 </body>
 ```
 
-Ideally this library contains pre-optimized files. SVGs may be run through something like [svgo][] (or our [buildchain][iop buildchain]) then copied to a persistent SVG directory.
-
 ### Notes
-
-Filenames will be normalized to lowercase. All storage keys will be lowercase. So `Logo.svg` will be stored under the key `logo` and `Portrait.SVG` will be stored under `portrait`.
 
 SVG files are not optimized in any way. Please use something like [svgo][] or [our buildchain][docker-build] to optimize SVG files.
 
