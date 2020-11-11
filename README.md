@@ -4,6 +4,12 @@
 
 A simple library to assist with inlining and re-using SVG elements on WordPress sites.
 
+[![Travis Build Status](https://img.shields.io/travis/ideasonpurpose/wp-svg-lib?logo=travis)](https://travis-ci.org/ideasonpurpose/wp-svg-lib)
+[![codecov](https://codecov.io/gh/ideasonpurpose/wp-svg-lib/branch/master/graph/badge.svg)](https://codecov.io/gh/ideasonpurpose/wp-svg-lib)
+[![Coveralls github](https://img.shields.io/coveralls/github/ideasonpurpose/wp-svg-lib?label=Coveralls)](https://coveralls.io/github/ideasonpurpose/wp-svg-lib)
+[![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability/ideasonpurpose/wp-svg-lib)](https://codeclimate.com/github/ideasonpurpose/wp-svg-lib)
+[![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+
 ## What it does
 
 SVG files are pulled from a common library. When a file is used, it's injected as a symbol which references an SVG symbol library which is injected intop the page footer.
