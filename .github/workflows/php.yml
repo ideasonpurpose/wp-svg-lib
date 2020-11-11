@@ -32,10 +32,16 @@ jobs:
 
     - name: Run test suite
       run: vendor/bin/phpunit
+      
+    - name: Coddle Coveralls
+      run: |
+        mkdir -p build/logs
+        cp coverage.xml build/logs/clover.xml
 
     - name: Upload to Coveralls
       env: 
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+        COVERALLS_RUN_LOCALLY: yes
       run: |
-        composer require twinh/php-coveralls
-        ./vendor/bin/php-coveralls --coverage_clover=coverage.xml -v
+        composer require --dev php-coveralls/php-coveralls
+        vendor/bin/php-coveralls -v
