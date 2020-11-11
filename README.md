@@ -66,6 +66,26 @@ The library keeps a record of which files have been included like this, then inj
 </body>
 ```
 
+## Installation
+
+Add an entry to the **composer.json** `repositories` property:
+
+```json
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/ideasonpurpose/wp-svg-lib.git",
+      "no-api": true
+    }
+  ]
+```
+
+Then require from composer:
+
+```sh
+composer require ideasonpurpose/wp-svg-lib:^1.0.0
+```
+
 ### Notes
 
 SVG files are not optimized in any way. Please use something like [svgo][] or [our buildchain][docker-build] to optimize SVG files.
