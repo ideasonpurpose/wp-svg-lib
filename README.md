@@ -12,27 +12,58 @@ A simple library to assist with inlining and re-using SVG elements on WordPress 
 
 ## What it does
 
-SVG files are pulled from a common library. When a file is used, it's injected as a symbol which references an SVG symbol library which is injected intop the page footer.
+This helper library reads SVG files from a directory then provides helper functions for embedding the files into WordPress templates. Files can be embedded inline or converted to symbols to help conserve bandwidth.
 
-## How it works
+## Instructions
 
-This command will inline an SVG file into the page:
+Initialize the library in your **functions.php** file like this:
 
+```php
+new IdeasOnPurpose\SVG(__DIR__ . '/dist/images/svg');
 ```
-<?= $SVG->get('site-logo') ?>
+
+Every SVG file in that directory or its children will be registered. The library will also inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.
+
+All SVGs are indexed by their filename and containing path.
+
+### Embedding SVGs
+
+Embedding images is the same as pasting the SVG files into the HTML source. Most registered SVG files can be inserted using just their name, so a file named **logo.svg** can embedded like this:
+
+```html
+<div><?= $SVG->logo ?></div>
 ```
 
-The `get()` method always returns a string.
+That code outputs something like this:
 
-The `$SVG` query var is added via `pre_get_posts`, so the library is available as a pseudo-global inside [`get_template_part()`][gtp] calls.
-
-## Using an SVG Library
-
-A directory of SVG files can be loaded for use. Initialize the library with a path like this:
-
+```html
+<div><svg viewBox="0 0 25 10">...</svg></div>
 ```
-<?php
-new ideasonpurpose\SVG\SVG('/path/to/svg-library');
+
+For SVG files whose names aren't compatible with PHP's property syntax or are nested subfolders, there's also an embed command:
+
+```html
+<li><?= $SVG->embed('arrow-left') ?></li>
+<li><?= $SVG->embed('icons/email') ?></li>
+```
+
+### Inlining SVG Symbols
+
+SVGs can also be injected as linked symbols, where most all of the markup only appears once. This can be useful for simple elements which appear repeatedly:
+
+```html
+<a href="#"><?= $SVG->get('arrow') ?>Go!</a>
+```
+
+The library keeps a record of which files have been included like this, then injects a symbol reference from the `wp_footer` hook. Together, the above code and symbol library look like this:
+
+```html
+<a href="#"><svg class="arrow"><use xlink:href="#arrow" href="#arrow" /></svg>Go!</a>
+
+<svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>
+    <symbol id="arrow" viewBox="0 0 50 50">...</symbol>
+</symbol>
+</body>
 ```
 
 Ideally this library contains pre-optimized files. SVGs may be run through something like [svgo][] (or our [buildchain][iop buildchain]) then copied to a persistent SVG directory.
@@ -41,10 +72,10 @@ Ideally this library contains pre-optimized files. SVGs may be run through somet
 
 Filenames will be normalized to lowercase. All storage keys will be lowercase. So `Logo.svg` will be stored under the key `logo` and `Portrait.SVG` will be stored under `portrait`.
 
-The **posttest** script is a workaround to remap files paths because PHPUnit writes absolute paths into its coverage files. Because those paths are from inside a Docker image, those paths don't exist. I couldn't find another workaround which let me display coverage in VS Code.
+SVG files are not optimized in any way. Please use something like [svgo][] or [our buildchain][docker-build] to optimize SVG files.
 
-<!-- TOOD: Fix that? Seems pathetic -->
+The **posttest** package.json script is a workaround to remap files paths because PHPUnit writes absolute paths into its coverage files. Since those paths are from inside a Docker image, they don't exist. I couldn't find another workaround which let me display coverage in VS Code.
 
 [svgo]: https://www.npmjs.com/package/svgo
-[iop buildchain]: https://github.com/ideasonpurpose/docker-build
+[docker-build]: https://github.com/ideasonpurpose/docker-build
 [gtp]: https://developer.wordpress.org/reference/functions/get_template_part/
