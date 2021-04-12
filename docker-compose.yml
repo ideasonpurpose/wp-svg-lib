@@ -4,14 +4,17 @@ services:
   composer:
     image: composer
     user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      COMPOSER_HOME: /.composer
     volumes:
       - ./:/app
+      - ~/.composer:/.composer
     command: install
 
-  test: 
+  test:
     build: .
     user: "${UID:-1000}:${GID:-1000}"
-    volumes: 
+    volumes:
       - ./:/app
     working_dir: /app
     entrypoint: []
