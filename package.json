@@ -43,12 +43,12 @@
     "version-everything": "^0.6.3"
   },
   "auto-changelog": {
-    "package": true
+    "package": true,
+    "backfillLimit": 7
   },
   "version-everything": {
     "files": [
-      "README.md",
-      "composer.json"
+      "README.md"
     ]
   }
 }
