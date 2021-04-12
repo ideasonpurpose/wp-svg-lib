@@ -1,6 +1,6 @@
 # wp-svg-lib
 
-#### Version 1.0.0
+#### Version 1.1.0
 
 A simple library to assist with inlining and re-using SVG elements on WordPress sites.
 
