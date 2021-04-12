@@ -30,7 +30,7 @@ All SVGs are indexed by their filename and containing path.
 
 Embedding images is the same as pasting the SVG files into the HTML source. Most registered SVG files can be inserted using just their name, so a file named **logo.svg** can embedded like this:
 
-```html
+```php
 <div><?= $SVG->logo ?></div>
 ```
 
@@ -38,6 +38,15 @@ That code outputs something like this:
 
 ```html
 <div><svg viewBox="0 0 25 10">...</svg></div>
+```
+
+The library will attempt to normalize all file names to camelCase to help with embedding. Directory separators will be replaced with double-underscores. Some examples:
+
+```php
+// the file 'icons/email-circle.svg' can be embedded as:
+$SVG->icons__emailCircle;
+
+
 ```
 
 For SVG files whose names aren't compatible with PHP's property syntax or are nested subfolders, there's also an embed command:

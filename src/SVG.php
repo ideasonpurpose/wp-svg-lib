@@ -1,31 +1,42 @@
 <?php
 namespace IdeasOnPurpose;
 
+use Doctrine\Inflector\InflectorFactory;
+
 /**
- * A library for embedding SVGs from the filesystem
+ * A library for embedding SVGs from the filesystem. Values are returned
+ * as strings and must be printed.
  *
- * SVGs can be embedded as symbols with $SVG->use('name')
- * SVGs can be embedded directly through magic methods like these:
- *      $SVG->name
- *      $SVG->arrow
+ * SVGs can be directly embedded through magic methods like these:
+ *      $SVG->name;
+ *      $SVG->arrow;
  *
- * A legacy method $SVG->get('name') is supported as an alias of `use`
+ * SVGs with incompatible names can be embedded like this:
+ *      $SVG->embed('kebab-case-name');
+ *
+ * All discovered files are normalized to camelCase, so this would also work:
+ *      $SVG->kebabCaseName;
+ *
+ * SVGs can be inserted as linked symbols with `$SVG->use('name')`
+ * A deprecated legacy method `$SVG->get('name')` is an alias of `use`
  */
 class SVG
 {
-    // Test circle
-    public static $test = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="100"/></svg>';
-
     private $lib = [];
-    public $libDir = null;
+    // public $libDir = null;
 
     public function __construct($libDir = null)
     {
+        $this->is_debug = defined('WP_DEBUG') && WP_DEBUG;
+
         $this->inUse = [];
-        $this->libDir = $libDir ? $libDir : $this->libDir;
-        $this->loadFromDirectory();
+        // $this->libDir = $libDir ? $libDir : $this->libDir;
+        // $this->libDir = $libDir ?? $this->libDir;
+        $this->loadFromDirectory($libDir);
         $this->libFill();
 
+        // TODO: Should this only happen if there are SVGs in the library?
+        //       How to make sure they appear if a second directory is loaded?
         // @codeCoverageIgnoreStart
         add_action('pre_get_posts', function () {
             set_query_var('SVG', $this);
@@ -36,20 +47,38 @@ class SVG
     }
 
     /**
-     * Checks the `$this->libDir` for SVG files and includes
+     * Checks $dir for SVG files and includes
      * any found using the files' baseName as the storage key.
      */
-    public function loadFromDirectory()
+    public function loadFromDirectory($dir = null)
     {
-        if ($this->libDir && file_exists($this->libDir) && is_dir($this->libDir)) {
-            $iterator = new \RecursiveDirectoryIterator($this->libDir);
+        // Do we need to resolve this path? What happens when we send something relative?
+        // $dir = $dir ?? $this->libDir;
+        // if ($this->libDir && file_exists($this->libDir) && is_dir($this->libDir)) {
+        if ($dir && file_exists($dir) && is_dir($dir)) {
+            $iterator = new \RecursiveDirectoryIterator($dir);
             foreach (new \RecursiveIteratorIterator($iterator) as $file) {
                 if (strtolower($file->getExtension()) === 'svg') {
-                    $key = str_replace($this->libDir, '', $file->getPathname());
+                    $key = str_replace($dir, '', $file->getPathname());
                     $key = preg_replace('/\.svg$/i', '', $key);
                     $key = ltrim($key, '/');
 
                     $this->lib[$key] = trim(file_get_contents($file->getRealPath()));
+                }
+            }
+
+            /**
+             * Normalize keys to camelCase then replace path-separators with double-underscores
+             * If the key does not already exist in $this->lib, link the new key to the original
+             *
+             * TODO: Should this be its own method?
+             */
+            $inflector = InflectorFactory::create()->build();
+            foreach ($this->lib as $key => $svg) {
+                $newKey = $inflector->camelize($key);
+                $newKey = preg_replace('/\//', '__', $newKey);
+                if (!array_key_exists($newKey, $this->lib)) {
+                    $this->lib[$newKey] = $this->lib[$key];
                 }
             }
         }
@@ -61,8 +90,9 @@ class SVG
     private function hasSVG($key)
     {
         if (!array_key_exists($key, $this->lib)) {
-            error_log("SVG Lib Error: The key '$key' does not match any registered SVGs");
-            echo "\n<!-- SVG Lib Error: The key '$key' does not match any registered SVGs -->\n\n";
+            $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
+            error_log($error);
+            echo "\n<!-- $error -->\n\n";
             return false;
         }
         return true;
@@ -99,10 +129,10 @@ class SVG
     }
 
     /**
-     * Legacy method for including SVGs as linked symbols. Now an alias
-     * for the SVG::use method.
-     *
-     * DEPRECATED
+     * Deprecated legacy method to include SVGs as linked symbols. Aliased to SVG::use
+     * Calls to SVG::get will print a warning, rename these to SVG::use or switch to
+     * direct embeds.
+     * @deprecated
      */
     public function get($name)
     {
@@ -112,7 +142,7 @@ class SVG
 
     /**
      * Alias for `debug`
-     * DEPRECATED
+     * @deprecated
      */
     public function directory()
     {
@@ -156,7 +186,7 @@ class SVG
 
         echo '<div id="' . $id . '" >';
         foreach ($this->lib as $key => $svg) {
-            printf('<div>%s</div>', $this->get($key));
+            printf('<div>%s</div>', $this->use($key));
             echo "<div style='color: #bbb'>\$SVG->get(\"<span style='color:#c00'>$key</span>\")</div>";
         }
         echo '</div>';

@@ -36,7 +36,7 @@ final class SVGTest extends TestCase
 {
     protected function setUp(): void
     {
-        $this->SVG = new SVG(__DIR__ . '/fixtures');
+        $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
     }
 
     public function testLib()
@@ -48,23 +48,7 @@ final class SVGTest extends TestCase
 
         // Loaded from filesystem
         $this->assertArrayHasKey('arrow', $lib);
-        $this->assertStringEqualsFile(__DIR__ . '/fixtures/arrow.svg', $lib['arrow'] . "\n");
-
-        // Embedded in Class
-        $this->assertArrayHasKey('test', $lib);
-    }
-
-    /**
-     * Test magic methods for embedding SVGs
-     */
-    public function testMagicMethods()
-    {
-        $arrow = $this->SVG->arrow;
-        $this->assertStringContainsString('<svg', $arrow);
-        \ob_start();
-        $nope = $this->SVG->nope;
-        $this->assertNull($nope);
-        ob_end_clean();
+        $this->assertStringEqualsFile(__DIR__ . '/fixtures/svg/arrow.svg', $lib['arrow'] . "\n");
     }
 
     public function testEmbed()
@@ -72,10 +56,9 @@ final class SVGTest extends TestCase
         $arrow = $this->SVG->embed('arrow');
         $this->assertStringContainsString('<svg', $arrow);
 
-        ob_start();
+        $this->expectOutputRegex('/<!-- SVG Lib Error/');
         $nope = $this->SVG->embed('nope');
         $this->assertNull($nope);
-        ob_end_clean();
     }
 
     public function testUse()
@@ -84,10 +67,9 @@ final class SVGTest extends TestCase
         $this->assertStringContainsString('<svg', $arrow);
         $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow);
 
-        ob_start();
+        $this->expectOutputRegex('/<!-- SVG Lib Error/');
         $nope = $this->SVG->use('nope');
         $this->assertNull($nope);
-        ob_end_clean();
     }
 
     /**
@@ -103,10 +85,9 @@ final class SVGTest extends TestCase
         $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow);
         $this->assertStringContainsString('get method is deprecated', $dump);
 
-        ob_start();
+        $this->expectOutputRegex('/<!-- SVG Lib Error/');
         $nope = $this->SVG->get('nope');
         $this->assertNull($nope);
-        ob_end_clean();
     }
 
     /**
@@ -121,19 +102,15 @@ final class SVGTest extends TestCase
          * User logged in, no SVGs in use
          */
         $user_logged_in = true;
-        ob_start();
+        $this->expectOutputRegex('/<!-- NO SVGs IN USE/');
         $this->SVG->dumpSymbols();
-        $dump = ob_get_clean();
-        $this->assertStringContainsString('<!-- NO SVGs IN USE -->', $dump);
 
         /**
          * No user logged in, no SVGs in use
          */
         $user_logged_in = false;
-        ob_start();
+        $this->expectOutputString('');
         $this->SVG->dumpSymbols();
-        $dump = ob_get_clean();
-        $this->assertEquals('', $dump);
     }
 
     /**
@@ -186,5 +163,14 @@ final class SVGTest extends TestCase
         $this->SVG->directory();
         $dump = ob_get_clean();
         $this->assertStringContainsString('directory method is deprecated', $dump);
+    }
+
+    public function testStaticSVGs()
+    {
+        require 'fixtures/StaticSVG.php';
+
+        $static = new StaticSVG(__DIR__ . '/fixtures/svg');
+        $svg = $static->arrow;
+        $this->assertStringContainsString('<svg', $svg);
     }
 }
