@@ -45,15 +45,20 @@ The library will attempt to normalize all file names to camelCase to help with e
 ```php
 // the file 'icons/email-circle.svg' can be embedded as:
 $SVG->icons__emailCircle;
-
-
 ```
 
 For SVG files whose names aren't compatible with PHP's property syntax or are nested subfolders, there's also an embed command:
 
-```html
+```php
 <li><?= $SVG->embed('arrow-left') ?></li>
 <li><?= $SVG->embed('icons/email') ?></li>
+```
+
+For convenience, SVG files can be embedded with or without their file extension. So the previous embeds could also work like this:
+
+```php
+<li><?= $SVG->embed('arrow-left.svg') ?></li>
+<li><?= $SVG->embed('icons/email.svg') ?></li>
 ```
 
 ### Inlining SVG Symbols
