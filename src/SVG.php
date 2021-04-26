@@ -61,11 +61,11 @@ class SVG
         //     return;
         // }
 
-        if (!$dir || !file_exists($dir) || !is_dir($dir)) {
-            return;
-        }
+        // if (!$dir || !file_exists($dir) || !is_dir($dir)) {
+        //     return;
+        // }
 
-        // if ($dir && file_exists($dir) && is_dir($dir)) {
+        if ($dir && file_exists($dir) && is_dir($dir)) {
         $iterator = new \RecursiveDirectoryIterator($dir);
         foreach (new \RecursiveIteratorIterator($iterator) as $file) {
             if (strtolower($file->getExtension()) === 'svg') {
@@ -93,7 +93,7 @@ class SVG
         //         $this->lib[$newKey] = $this->lib[$key];
         //     }
         // }
-        // }
+        }
     }
             /**
          * Normalize keys to camelCase then replace path-separators with double-underscores
