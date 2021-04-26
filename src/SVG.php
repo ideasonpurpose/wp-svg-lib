@@ -33,6 +33,7 @@ class SVG
         // $this->libDir = $libDir ? $libDir : $this->libDir;
         // $this->libDir = $libDir ?? $this->libDir;
         $this->loadFromDirectory($libDir);
+        $this->libNormalizeKeys();
         $this->libFill();
 
         // TODO: Should this only happen if there are SVGs in the library?
@@ -84,6 +85,24 @@ class SVG
          *
          * TODO: Should this be its own method?
          */
+        // $inflector = InflectorFactory::create()->build();
+        // foreach ($this->lib as $key => $svg) {
+        //     $newKey = $inflector->camelize($key);
+        //     $newKey = preg_replace('/\//', '__', $newKey);
+        //     if (!array_key_exists($newKey, $this->lib)) {
+        //         $this->lib[$newKey] = $this->lib[$key];
+        //     }
+        // }
+        // }
+    }
+            /**
+         * Normalize keys to camelCase then replace path-separators with double-underscores
+         * If the key does not already exist in $this->lib, link the new key to the original
+         *
+         * TODO: Should this be its own method?
+         */
+
+    private function libNormalizeKeys(){
         $inflector = InflectorFactory::create()->build();
         foreach ($this->lib as $key => $svg) {
             $newKey = $inflector->camelize($key);
@@ -92,7 +111,7 @@ class SVG
                 $this->lib[$newKey] = $this->lib[$key];
             }
         }
-        // }
+
     }
 
     /**
