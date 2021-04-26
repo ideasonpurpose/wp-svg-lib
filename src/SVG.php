@@ -57,15 +57,10 @@ class SVG
         // $dir = $dir ?? $this->libDir;
         // if ($this->libDir && file_exists($this->libDir) && is_dir($this->libDir)) {
 
-        // if (!($dir && file_exists($dir) && is_dir($dir))) {
-        //     return;
-        // }
+        if (!$dir || !file_exists($dir) || !is_dir($dir)) {
+            return;
+        }
 
-        // if (!$dir || !file_exists($dir) || !is_dir($dir)) {
-        //     return;
-        // }
-
-        if ($dir && file_exists($dir) && is_dir($dir)) {
         $iterator = new \RecursiveDirectoryIterator($dir);
         foreach (new \RecursiveIteratorIterator($iterator) as $file) {
             if (strtolower($file->getExtension()) === 'svg') {
@@ -78,31 +73,14 @@ class SVG
                 $this->lib[$key_svg] = $this->lib[$key];
             }
         }
-
-        /**
-         * Normalize keys to camelCase then replace path-separators with double-underscores
-         * If the key does not already exist in $this->lib, link the new key to the original
-         *
-         * TODO: Should this be its own method?
-         */
-        // $inflector = InflectorFactory::create()->build();
-        // foreach ($this->lib as $key => $svg) {
-        //     $newKey = $inflector->camelize($key);
-        //     $newKey = preg_replace('/\//', '__', $newKey);
-        //     if (!array_key_exists($newKey, $this->lib)) {
-        //         $this->lib[$newKey] = $this->lib[$key];
-        //     }
-        // }
-        }
     }
-            /**
-         * Normalize keys to camelCase then replace path-separators with double-underscores
-         * If the key does not already exist in $this->lib, link the new key to the original
-         *
-         * TODO: Should this be its own method?
-         */
 
-    private function libNormalizeKeys(){
+    /**
+     * Normalize keys to camelCase then replace path-separators with double-underscores
+     * If the key does not already exist in $this->lib, link the new key to the original
+     */
+    private function libNormalizeKeys()
+    {
         $inflector = InflectorFactory::create()->build();
         foreach ($this->lib as $key => $svg) {
             $newKey = $inflector->camelize($key);
@@ -111,7 +89,6 @@ class SVG
                 $this->lib[$newKey] = $this->lib[$key];
             }
         }
-
     }
 
     /**
