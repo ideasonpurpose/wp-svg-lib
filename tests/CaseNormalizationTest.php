@@ -72,6 +72,20 @@ final class CaseNormalizationTest extends TestCase
         $this->assertNull($svg);
     }
 
+    public function testDotCase()
+    {
+        $svg = $this->SVG->embed('dot.case');
+        $this->assertStringContainsString('<svg', $svg);
+
+        $this->expectOutputRegex("/<!-- SVG Lib Error: The key 'dotcase'/");
+        $svg = $this->SVG->dotcase;
+        $this->assertNull($svg);
+
+        $this->expectOutputRegex("/<!-- SVG Lib Error: The key 'dotCase'/");
+        $svg = $this->SVG->dotCase;
+        $this->assertNull($svg);
+    }
+
     public function testSnakeCase()
     {
         $svg = $this->SVG->snakeCase;

@@ -51,6 +51,13 @@ final class SVGTest extends TestCase
         $this->assertStringEqualsFile(__DIR__ . '/fixtures/svg/arrow.svg', $lib['arrow'] . "\n");
     }
 
+    public function testNoLib()
+    {
+        $nope = new SVG(__DIR__ . '/fixtures/svg/arrow.svg');
+        $this->expectOutputRegex('/><\/div>/');
+        $this->assertCount(0, $nope->debug());
+    }
+
     public function testEmbed()
     {
         $arrow = $this->SVG->embed('arrow');

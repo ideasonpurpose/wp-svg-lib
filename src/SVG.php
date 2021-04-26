@@ -47,41 +47,52 @@ class SVG
     }
 
     /**
-     * Checks $dir for SVG files and includes
-     * any found using the files' baseName as the storage key.
+     * Checks $dir for SVG files and includes any found using the files' baseName as the storage key.
+     * NOTE: This uses $file->getPathname instead of basename to accommodate searching subdirectories
      */
     public function loadFromDirectory($dir = null)
     {
         // Do we need to resolve this path? What happens when we send something relative?
         // $dir = $dir ?? $this->libDir;
         // if ($this->libDir && file_exists($this->libDir) && is_dir($this->libDir)) {
-        if ($dir && file_exists($dir) && is_dir($dir)) {
-            $iterator = new \RecursiveDirectoryIterator($dir);
-            foreach (new \RecursiveIteratorIterator($iterator) as $file) {
-                if (strtolower($file->getExtension()) === 'svg') {
-                    $key = str_replace($dir, '', $file->getPathname());
-                    $key = preg_replace('/\.svg$/i', '', $key);
-                    $key = ltrim($key, '/');
 
-                    $this->lib[$key] = trim(file_get_contents($file->getRealPath()));
-                }
-            }
+        // if (!($dir && file_exists($dir) && is_dir($dir))) {
+        //     return;
+        // }
 
-            /**
-             * Normalize keys to camelCase then replace path-separators with double-underscores
-             * If the key does not already exist in $this->lib, link the new key to the original
-             *
-             * TODO: Should this be its own method?
-             */
-            $inflector = InflectorFactory::create()->build();
-            foreach ($this->lib as $key => $svg) {
-                $newKey = $inflector->camelize($key);
-                $newKey = preg_replace('/\//', '__', $newKey);
-                if (!array_key_exists($newKey, $this->lib)) {
-                    $this->lib[$newKey] = $this->lib[$key];
-                }
+        if (!$dir || !file_exists($dir) || !is_dir($dir)) {
+            return;
+        }
+
+        // if ($dir && file_exists($dir) && is_dir($dir)) {
+        $iterator = new \RecursiveDirectoryIterator($dir);
+        foreach (new \RecursiveIteratorIterator($iterator) as $file) {
+            if (strtolower($file->getExtension()) === 'svg') {
+                $key = str_replace($dir, '', $file->getPathname());
+                $key = ltrim($key, '/');
+                $key_svg = $key;
+                $key = preg_replace('/\.svg$/i', '', $key);
+
+                $this->lib[$key] = trim(file_get_contents($file->getRealPath()));
+                $this->lib[$key_svg] = $this->lib[$key];
             }
         }
+
+        /**
+         * Normalize keys to camelCase then replace path-separators with double-underscores
+         * If the key does not already exist in $this->lib, link the new key to the original
+         *
+         * TODO: Should this be its own method?
+         */
+        $inflector = InflectorFactory::create()->build();
+        foreach ($this->lib as $key => $svg) {
+            $newKey = $inflector->camelize($key);
+            $newKey = preg_replace('/\//', '__', $newKey);
+            if (!array_key_exists($newKey, $this->lib)) {
+                $this->lib[$newKey] = $this->lib[$key];
+            }
+        }
+        // }
     }
 
     /**
@@ -190,6 +201,7 @@ class SVG
             echo "<div style='color: #bbb'>\$SVG->get(\"<span style='color:#c00'>$key</span>\")</div>";
         }
         echo '</div>';
+        return $this->lib;
     }
 
     /**
