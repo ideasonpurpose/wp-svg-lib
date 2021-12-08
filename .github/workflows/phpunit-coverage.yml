@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
@@ -45,5 +45,21 @@ jobs:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
         COVERALLS_RUN_LOCALLY: yes
       run: |
-        composer require --dev php-coveralls/php-coveralls
+        composer require 'php-coveralls/php-coveralls:2.4.3'
         vendor/bin/php-coveralls -v
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        fail_ci_if_error: true
+        files: ./coverage.xml
+        verbose: true
+
+    - name: Code Climate coverage
+      uses: paambaati/codeclimate-action@v3.0.0
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      with:
+        debug: true
+        coverageLocations: |
+          coverage.xml:clover

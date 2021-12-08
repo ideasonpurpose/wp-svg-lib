@@ -4,10 +4,10 @@
 
 A simple library to assist with inlining and re-using SVG elements on WordPress sites.
 
-[![Travis Build Status](https://img.shields.io/travis/ideasonpurpose/wp-svg-lib?logo=travis)](https://travis-ci.org/ideasonpurpose/wp-svg-lib)
+[![Packagist](https://badgen.net/packagist/v/ideasonpurpose/wp-svg-lib)](https://packagist.org/packages/ideasonpurpose/wp-svg-lib)
 [![codecov](https://codecov.io/gh/ideasonpurpose/wp-svg-lib/branch/master/graph/badge.svg)](https://codecov.io/gh/ideasonpurpose/wp-svg-lib)
-[![Coveralls github](https://img.shields.io/coveralls/github/ideasonpurpose/wp-svg-lib?label=Coveralls)](https://coveralls.io/github/ideasonpurpose/wp-svg-lib)
-[![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability/ideasonpurpose/wp-svg-lib)](https://codeclimate.com/github/ideasonpurpose/wp-svg-lib)
+[![Coverage Status](https://coveralls.io/repos/github/ideasonpurpose/wp-svg-lib/badge.svg)](https://coveralls.io/github/ideasonpurpose/wp-svg-lib)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c5828971734cecd15cd0/maintainability)](https://codeclimate.com/github/ideasonpurpose/wp-svg-lib/maintainability)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 ## What it does
@@ -76,28 +76,16 @@ The library keeps a record of which files have been included like this, then inj
 
 <svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>
     <symbol id="arrow" viewBox="0 0 50 50">...</symbol>
-</symbol>
+</svg>
 </body>
 ```
 
 ## Installation
 
-Add an entry to the **composer.json** `repositories` property:
+This library is available on [Packagist](https://packagist.org/packages/ideasonpurpose/wp-svg-lib), to use it, require it in **composer.json** or tell Composer to load the package:
 
-```json
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/ideasonpurpose/wp-svg-lib.git",
-      "no-api": true
-    }
-  ]
-```
-
-Then require from composer:
-
-```sh
-composer require ideasonpurpose/wp-svg-lib:^1.0.0
+```bash
+$ composer require ideasonpurpose/wp-svg-lib
 ```
 
 ### Notes
