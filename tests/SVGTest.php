@@ -68,11 +68,12 @@ final class SVGTest extends TestCase
     {
         $expected = 'use was called';
         $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
-            ->disableOriginalConstructor()
-            ->onlyMethods(['use'])
-            ->getMock();
+        ->disableOriginalConstructor()
+        ->onlyMethods(['use'])
+        ->getMock();
         $svg->method('use')->willReturn($expected);
 
+        /** @var \IdeasOnPurpose\WP\SVG $svg */
         $actual = $svg->get('arrow');
         $this->assertEquals($expected, $actual);
         $this->expectOutputRegex('/get method is deprecated/');
