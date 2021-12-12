@@ -1,65 +1,54 @@
-name: PHPUnit & Test Coverage
+name: PHPUnit Test Coverage
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate
+      - name: Validate composer.json and composer.lock
+        run: composer validate
 
-    # - name: Cache Composer packages
-    #   id: composer-cache
-    #   uses: actions/cache@v2
-    #   with:
-    #     path: vendor
-    #     key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-php-
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
 
-    - name: Install dependencies
-      # if: steps.composer-cache.outputs.cache-hit != 'true'
-      run: composer install --prefer-dist --no-progress --no-suggest
+      - name: Run test suite
+        env:
+          XDEBUG_MODE: coverage
+        run: vendor/bin/phpunit
 
-    - name: Run test suite
-      env: 
-        XDEBUG_MODE: coverage
-      run: vendor/bin/phpunit
-      
-    - name: Coddle Coveralls
-      run: |
-        mkdir -p build/logs
-        cp coverage.xml build/logs/clover.xml
+      - name: Coddle Coveralls
+        run: |
+          mkdir -p build/logs
+          cp coverage.xml build/logs/clover.xml
 
-    - name: Upload to Coveralls
-      env: 
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-        COVERALLS_RUN_LOCALLY: yes
-      run: |
-        composer require 'php-coveralls/php-coveralls:2.4.3'
-        vendor/bin/php-coveralls -v
-        
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
-      with:
-        fail_ci_if_error: true
-        files: ./coverage.xml
-        verbose: true
+      - name: Upload to Coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+          COVERALLS_RUN_LOCALLY: yes
+        run: |
+          composer require 'php-coveralls/php-coveralls:2.4.3'
+          vendor/bin/php-coveralls -v
 
-    - name: Code Climate coverage
-      uses: paambaati/codeclimate-action@v3.0.0
-      env:
-        CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-      with:
-        debug: true
-        coverageLocations: |
-          coverage.xml:clover
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          files: ./coverage.xml
+          verbose: true
+
+      - name: Code Climate coverage
+        uses: paambaati/codeclimate-action@v3.0.0
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        with:
+          debug: true
+          coverageLocations: |
+            coverage.xml:clover
