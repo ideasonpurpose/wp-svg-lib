@@ -23,6 +23,9 @@ jobs:
         run: |
           echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
