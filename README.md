@@ -14,12 +14,14 @@ A simple library to assist with inlining and re-using SVG elements on WordPress 
 
 This helper library reads SVG files from a directory then provides helper functions for embedding the files into WordPress templates. Files can be embedded inline or converted to symbols to help conserve bandwidth.
 
+_**Note:** Version 2.0.0 changed the namespace from `IdeasOnPurpose\SVG` to `IdeasOnPurpose\WP\SVG`._
+
 ## Instructions
 
 Initialize the library in your **functions.php** file like this:
 
 ```php
-new IdeasOnPurpose\SVG(__DIR__ . '/dist/images/svg');
+new IdeasOnPurpose\WP\SVG(__DIR__ . '/dist/images/svg');
 ```
 
 Every SVG file in that directory or its children will be registered. The library will also inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.

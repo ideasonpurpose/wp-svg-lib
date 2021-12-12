@@ -1,6 +1,6 @@
 <?php
 
-namespace IdeasOnPurpose;
+namespace IdeasOnPurpose\WP;
 
 class StaticSVG extends SVG
 {

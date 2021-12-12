@@ -1,5 +1,5 @@
 <?php
-namespace IdeasOnPurpose;
+namespace IdeasOnPurpose\WP;
 
 use Doctrine\Inflector\InflectorFactory;
 

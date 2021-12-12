@@ -1,6 +1,6 @@
 <?php
 
-namespace IdeasOnPurpose;
+namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
@@ -15,7 +15,7 @@ function error_log($err)
 }
 
 /**
- * @covers \IdeasOnPurpose\SVG
+ * @covers \IdeasOnPurpose\WP\SVG
  */
 final class SVGTest extends TestCase
 {
@@ -67,8 +67,7 @@ final class SVGTest extends TestCase
     public function testLegacyGet()
     {
         $expected = 'use was called';
-        // TODO: Update namespace reference after switching to IdeasOnPurpose\WP\SVG
-        $svg = $this->getMockBuilder('\IdeasOnPurpose\SVG')
+        $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->disableOriginalConstructor()
             ->onlyMethods(['use'])
             ->getMock();

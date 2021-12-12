@@ -1,6 +1,6 @@
 <?php
 
-namespace IdeasOnPurpose;
+namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
@@ -8,7 +8,7 @@ use IdeasOnPurpose\WP\Test;
 Test\Stubs::init();
 
 /**
- * @covers \IdeasOnPurpose\SVG
+ * @covers \IdeasOnPurpose\WP\SVG
  */
 final class CaseNormalizationTest extends TestCase
 {
