@@ -3,6 +3,9 @@
 namespace IdeasOnPurpose;
 
 use PHPUnit\Framework\TestCase;
+use IdeasOnPurpose\WP\Test;
+
+Test\Stubs::init();
 
 /**
  * @covers \IdeasOnPurpose\SVG
@@ -27,5 +30,20 @@ final class ExtensionHandlingTest extends TestCase
 
         $svg = $this->SVG->embed('diff.svg.svg');
         $this->assertStringContainsString('<svg fill="pink"', $svg);
+    }
+
+    public function testNotSVGFiles()
+    {
+        $this->SVG->is_debug = false;
+        $svg = $this->SVG->embed('wrong.png');
+        $this->assertNull($svg);
+    }
+
+    public function testNotSVGFilesDebug()
+    {
+        $this->SVG->is_debug = true;
+        $svg = $this->SVG->embed('wrong.png');
+        $this->assertNull($svg);
+        $this->expectOutputRegex('/SVG Lib Error:/');
     }
 }

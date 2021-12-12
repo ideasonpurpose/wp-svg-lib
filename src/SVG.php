@@ -22,29 +22,34 @@ use Doctrine\Inflector\InflectorFactory;
  */
 class SVG
 {
-    private $lib = [];
-    // public $libDir = null;
+    public $lib = [];
 
     public function __construct($libDir = null)
     {
         $this->is_debug = defined('WP_DEBUG') && WP_DEBUG;
 
         $this->inUse = [];
-        // $this->libDir = $libDir ? $libDir : $this->libDir;
-        // $this->libDir = $libDir ?? $this->libDir;
         $this->loadFromDirectory($libDir);
         $this->libNormalizeKeys();
         $this->libFill();
 
-        // TODO: Should this only happen if there are SVGs in the library?
-        //       How to make sure they appear if a second directory is loaded?
-        // @codeCoverageIgnoreStart
-        add_action('pre_get_posts', function () {
-            set_query_var('SVG', $this);
-        });
+        // d($this->lib);
+        // // TODO: Should this only happen if there are SVGs in the library?
+        // //       How to make sure they appear if a second directory is loaded?
 
+        // add_action('pre_get_posts', function () {
+        //     set_query_var('SVG', $this);
+        // });
+
+        add_action('pre_get_posts', [$this, 'registerQueryVar']);
         add_action('wp_footer', [$this, 'dumpSymbols']);
-        // @codeCoverageIgnoreEnd
+    }
+
+    public function registerQueryVar()
+    {
+        if (count($this->lib) > 0) {
+            set_query_var('SVG', $this);
+        }
     }
 
     /**
@@ -97,9 +102,11 @@ class SVG
     private function hasSVG($key)
     {
         if (!array_key_exists($key, $this->lib)) {
-            $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
-            error_log($error);
-            echo "\n<!-- $error -->\n\n";
+            if ($this->is_debug) {
+                $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
+                error_log($error);
+                echo "\n<!-- $error -->\n\n";
+            }
             return false;
         }
         return true;
@@ -162,8 +169,9 @@ class SVG
      */
     public function debug()
     {
-        $id = 'debug-' . md5(microtime(true));
-        echo "<style>
+        if (count($this->lib) > 0) {
+            $id = 'debug-' . md5(microtime(true));
+            echo "<style>
             #$id {
                 display: grid;
                 grid-template-columns: repeat(2, 36px auto);
@@ -191,12 +199,13 @@ class SVG
             }
             </style>";
 
-        echo '<div id="' . $id . '" >';
-        foreach ($this->lib as $key => $svg) {
-            printf('<div>%s</div>', $this->use($key));
-            echo "<div style='color: #bbb'>\$SVG->get(\"<span style='color:#c00'>$key</span>\")</div>";
+            echo '<div id="' . $id . '" >';
+            foreach ($this->lib as $key => $svg) {
+                printf('<div>%s</div>', $this->use($key));
+                echo "<div style='color: #bbb'>\$SVG->get(\"<span style='color:#c00'>$key</span>\")</div>";
+            }
+            echo '</div>';
         }
-        echo '</div>';
         return $this->lib;
     }
 
@@ -212,11 +221,12 @@ class SVG
         $static_vars = get_class_vars(get_called_class());
         foreach ($static_vars as $key => $svg) {
             if (is_string($svg) && substr($svg, 0, 4) == '<svg') {
-                $this->lib[$key] = preg_replace(
-                    ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
-                    ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
-                    $svg
-                );
+                // $this->lib[$key] = preg_replace(
+                //     ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
+                //     ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
+                //     $svg
+                // );
+                $this->lib[$key] = $svg;
             }
         }
     }
@@ -242,7 +252,16 @@ class SVG
             );
         } else {
             if (is_user_logged_in()) {
-                printf("\n<!-- NO SVGs IN USE -->\n<!-- message from %s -->\n\n", __FILE__);
+                $trace = debug_backtrace();
+                echo "<!-- NO SVGs IN USE -->\n";
+
+                if ($this->is_debug) {
+                    $trace = array_map(fn($i) => $i['file'] . ':' . $i['line'], debug_backtrace());
+                    printf(
+                        "<!-- SVG::dumpSymbols call stack:\n\t%s\n -->\n",
+                        implode("\n\t", $trace)
+                    );
+                }
             }
         }
     }
