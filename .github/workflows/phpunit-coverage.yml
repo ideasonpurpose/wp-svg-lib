@@ -34,8 +34,8 @@ jobs:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
           COVERALLS_RUN_LOCALLY: yes
         run: |
-          composer require 'php-coveralls/php-coveralls:2.4.3'
-          vendor/bin/php-coveralls --coverage_clover=build/logs/coverage.xml -v
+          composer require 'php-coveralls/php-coveralls:2.5.2'
+          vendor/bin/php-coveralls --coverage_clover=coverage.xml -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
