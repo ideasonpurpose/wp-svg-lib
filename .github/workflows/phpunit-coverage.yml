@@ -35,7 +35,7 @@ jobs:
           COVERALLS_RUN_LOCALLY: yes
         run: |
           composer require 'php-coveralls/php-coveralls:2.5.2'
-          vendor/bin/php-coveralls --coverage_clover=coverage.xml -v
+          vendor/bin/php-coveralls --coverage_clover ./coverage.xml --json_path ./coveralls-upload.json -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
