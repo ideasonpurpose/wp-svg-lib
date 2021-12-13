@@ -24,10 +24,10 @@ jobs:
           XDEBUG_MODE: coverage
         run: vendor/bin/phpunit
 
-      - name: Coddle Coveralls
-        run: |
-          mkdir -p build/logs
-          cp coverage.xml build/logs/clover.xml
+      # - name: Coddle Coveralls
+      #   run: |
+      #     mkdir -p build/logs
+      #     cp coverage.xml build/logs/clover.xml
 
       - name: Upload to Coveralls
         env:
@@ -35,7 +35,7 @@ jobs:
           COVERALLS_RUN_LOCALLY: yes
         run: |
           composer require 'php-coveralls/php-coveralls:2.4.3'
-          vendor/bin/php-coveralls -v
+          vendor/bin/php-coveralls --coverage_clover=build/logs/coverage.xml -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
@@ -44,6 +44,9 @@ jobs:
           files: ./coverage.xml
           verbose: true
 
+      # The Code Climate Test Coverage Reporter ID can be found by visiting the project's 
+      # Repo Settings pane, click Test Coverage in the left sidebar. Find the ID in the 
+      # second section. 
       - name: Code Climate coverage
         uses: paambaati/codeclimate-action@v3.0.0
         env:
