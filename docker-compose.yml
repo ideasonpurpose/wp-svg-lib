@@ -10,11 +10,8 @@ services:
       - ~/.composer:/.composer
     command: install
 
+  # https://hub.docker.com/r/ideasonpurpose/phpunit-watch
   test:
-    build: .
-    user: "${UID:-1000}:${GID:-1000}"
+    image: ideasonpurpose/phpunit-watch:0.1.5
     volumes:
       - ./:/app
-    working_dir: /app
-    entrypoint: []
-    command: vendor/bin/phpunit
