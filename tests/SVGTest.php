@@ -45,13 +45,13 @@ final class SVGTest extends TestCase
 
     public function testUse()
     {
-        $arrow = $this->SVG->use('arrow');
+        $arrow_svg = $this->SVG->use('arrow.svg');
         $nope = $this->SVG->use('not-a-file');
         $inUse = $this->SVG->inUse;
         $actual = $this->getActualOutput();
 
         $this->assertStringContainsString('<!-- SVG Lib Error', $actual);
-        $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow);
+        $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow_svg);
         $this->assertNull($nope);
         $this->assertCount(1, $inUse);
         $this->expectOutputRegex('/<!-- SVG Lib Error/');

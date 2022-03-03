@@ -71,11 +71,8 @@ class SVG
             if (strtolower($file->getExtension()) === 'svg') {
                 $key = str_replace($dir, '', $file->getPathname());
                 $key = ltrim($key, '/');
-                $key_svg = $key;
                 $key = preg_replace('/\.svg$/i', '', $key);
-
                 $this->lib[$key] = trim(file_get_contents($file->getRealPath()));
-                $this->lib[$key_svg] = $this->lib[$key];
             }
         }
     }
@@ -119,25 +116,32 @@ class SVG
 
     /**
      * Inline SVGs directly by name
+     * '.svg' extensions are stripped, so 'arrow' and 'arrow.svg' will both return the 'arrow.svg' file
      */
     public function embed($name)
     {
-        if ($this->hasSVG($name)) {
-            return $this->lib[$name];
+        $basename = preg_replace('/\.svg$/i', '', $name);
+
+        if ($this->hasSVG($basename)) {
+            return $this->lib[$basename];
         }
     }
 
     /**
      * include SVGs as linked symbols
      * This replaces the legacy SVG::get method
+     *
+     * '.svg' extensions are stripped, so 'arrow' and 'arrow.svg' will both return the 'arrow.svg' file
      */
     public function use($name)
     {
-        if ($this->hasSVG($name)) {
-            array_push($this->inUse, $name);
+        $basename = preg_replace('/\.svg$/i', '', $name);
+
+        if ($this->hasSVG($basename)) {
+            array_push($this->inUse, $basename);
             return sprintf(
                 '<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>',
-                $name
+                $basename
             );
         }
     }
