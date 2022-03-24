@@ -17,11 +17,10 @@
   "require-dev": {
     "phpunit/phpunit": "^9.5.10",
     "php-stubs/wordpress-stubs": "^5.8",
-    "php-stubs/acf-pro-stubs": "^5.10.2",
+    "php-stubs/acf-pro-stubs": "^5.10",
     "ideasonpurpose/wp-test-stubs": "dev-main@dev"
   },
   "require": {
-    "kint-php/kint": "^3.3",
     "doctrine/inflector": "^2.0"
   },
   "archive": {
@@ -30,7 +29,6 @@
       "/tests",
       "CHANGELOG.md",
       "docker-compose.yml",
-      "Dockerfile",
       "package*",
       "phpunit.xml"
     ]

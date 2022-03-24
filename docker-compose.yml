@@ -1,7 +1,7 @@
 services:
   # https://hub.docker.com/_/composer
   composer:
-    image: composer:2.1.14
+    image: composer:2
     user: "${UID:-1000}:${GID:-1000}"
     environment:
       COMPOSER_HOME: /.composer
