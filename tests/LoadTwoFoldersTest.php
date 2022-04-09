@@ -16,6 +16,7 @@ final class LoadTwoFoldersTest extends TestCase
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
         $this->SVG->loadFromDirectory(__DIR__ . '/fixtures/svg2');
+        $this->SVG->init();
 
         $svg = $this->SVG->second;
         $this->assertStringContainsString('<svg', $svg);

@@ -22,6 +22,7 @@ final class SVGTest extends TestCase
     protected function setUp(): void
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $this->SVG->init();
     }
 
     public function testLib()
@@ -29,7 +30,10 @@ final class SVGTest extends TestCase
         $lib = $this->SVG->lib;
         // Loaded from filesystem
         $this->assertArrayHasKey('arrow', $lib);
-        $this->assertStringEqualsFile(__DIR__ . '/fixtures/svg/arrow.svg', $lib['arrow'] . "\n");
+        $this->assertStringEqualsFile(
+            __DIR__ . '/fixtures/svg/arrow.svg',
+            $lib['arrow']->content->raw . "\n"
+        );
     }
 
     public function testEmbed()
@@ -68,9 +72,9 @@ final class SVGTest extends TestCase
     {
         $expected = 'use was called';
         $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
-        ->disableOriginalConstructor()
-        ->onlyMethods(['use'])
-        ->getMock();
+            ->disableOriginalConstructor()
+            ->onlyMethods(['use'])
+            ->getMock();
         $svg->method('use')->willReturn($expected);
 
         /** @var \IdeasOnPurpose\WP\SVG $svg */
@@ -183,6 +187,8 @@ final class SVGTest extends TestCase
         require 'fixtures/StaticSVG.php';
 
         $static = new StaticSVG(__DIR__ . '/fixtures/svg');
+        $static->init();
+
         $svg = $static->arrowStatic;
         $this->assertStringContainsString('<svg', $svg);
     }

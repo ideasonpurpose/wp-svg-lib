@@ -15,6 +15,7 @@ final class CaseNormalizationTest extends TestCase
     protected function setUp(): void
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $this->SVG->init();
         $this->SVG->is_debug = true;
     }
 
@@ -46,7 +47,7 @@ final class CaseNormalizationTest extends TestCase
         $this->assertStringContainsString('<svg', $svg);
 
         $svg = $this->SVG->embed('camel-case');
-        $this->assertNull($svg);
+        $this->assertStringContainsString('<svg', $svg);
 
         $svg = $this->SVG->camelcase; // all-lowercase request fails
         $this->assertNull($svg);
@@ -151,5 +152,48 @@ final class CaseNormalizationTest extends TestCase
         $this->assertNull($svg);
 
         $this->expectOutputRegex('/<!-- SVG Lib Error/');
+    }
+
+    public function testDirectoryRoundtrip()
+    {
+        // Keys with directory names need to be idempotent:
+        //'social/icon' should be 'social__icon'
+        // 'social__icon' should also be 'social__icon'
+        // Each of these checks normalized keys and double-normalized keys
+
+        $key = 'social/icon.svg';
+        $expected = 'social__icon';
+        $actual = $this->SVG->normalizeKey($key);
+        $actual2 = $this->SVG->normalizeKey($actual);
+        $this->assertEquals($expected, $actual);
+        $this->assertEquals($actual2, $actual);
+
+        $key = 'social__icon';
+        $expected = 'social__icon';
+        $actual = $this->SVG->normalizeKey($key);
+        $actual2 = $this->SVG->normalizeKey($actual);
+        $this->assertEquals($expected, $actual);
+        $this->assertEquals($actual2, $actual);
+
+        $key = 'dash-name/camelCase.svg';
+        $expected = 'dashName__camelCase';
+        $actual = $this->SVG->normalizeKey($key);
+        $actual2 = $this->SVG->normalizeKey($actual);
+        $this->assertEquals($expected, $actual);
+        $this->assertEquals($actual2, $actual);
+
+        $key = 'dash-name/dash-name.svg';
+        $expected = 'dashName__dashName';
+        $actual = $this->SVG->normalizeKey($key);
+        $actual2 = $this->SVG->normalizeKey($actual);
+        $this->assertEquals($expected, $actual);
+        $this->assertEquals($actual2, $actual);
+
+        $key = 'dashName__dashName';
+        $expected = 'dashName__dashName';
+        $actual = $this->SVG->normalizeKey($key);
+        $actual2 = $this->SVG->normalizeKey($actual);
+        $this->assertEquals($expected, $actual);
+        $this->assertEquals($actual2, $actual);
     }
 }

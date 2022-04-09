@@ -15,6 +15,7 @@ final class ExtensionHandlingTest extends TestCase
     protected function setUp(): void
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg/extensions');
+        $this->SVG->init();
     }
 
     public function testEmbedWithExtension()
@@ -29,7 +30,7 @@ final class ExtensionHandlingTest extends TestCase
         $this->assertStringContainsString('<svg', $svg);
 
         $svg = $this->SVG->embed('diff.svg.svg');
-        $this->assertStringContainsString('<svg fill="pink"', $svg);
+        $this->assertStringContainsString('<g fill="pink"', $svg);
     }
 
     public function testNotSVGFiles()
