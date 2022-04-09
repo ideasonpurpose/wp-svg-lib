@@ -82,6 +82,12 @@ The library keeps a record of which files have been included like this, then inj
 </body>
 ```
 
+## REST API
+
+This library adds the `/ideaosnpurpose/v1/svg` endpoint to the WP-JSON API.
+
+If either height or width are 'auto' then that value will be calculated from the aspect ratio and the opposite dimenision.
+
 ## Installation
 
 This library is available on [Packagist](https://packagist.org/packages/ideasonpurpose/wp-svg-lib), to use it, require it in **composer.json** or tell Composer to load the package:
@@ -95,6 +101,43 @@ $ composer require ideasonpurpose/wp-svg-lib
 SVG files are not optimized in any way. Please use something like [svgo][] or [our buildchain][docker-build] to optimize SVG files.
 
 The **posttest** package.json script is a workaround to remap files paths because PHPUnit writes absolute paths into its coverage files. Since those paths are from inside a Docker image, they don't exist. I couldn't find another workaround which let me display coverage in VS Code.
+
+---
+
+> WIP SVG REST API notes:
+
+TODO: If the SVG can be parsed as XML, then we can read attributes
+
+The goal would be to normalize dimensions, an potentially provide
+functionality to enforce dimensions.
+
+eg. a request for /wp-json/ideasonpurpose/v1/svg/arrow?w=48
+would return the SVG with updated width/height tags, derived
+from the viewBox dimensions.
+
+If the raw opening tag looked like this:
+
+    <svg viewBox="0 0 150 100">
+
+The SVG API would return something this:
+
+    <svg width="48" height="32" viewBox="0 0 150 100">
+
+Questions: - Q. Should existing height/width tags be rewritten?
+A. yes, if explicitly requested.
+
+    - Q. What happens to invalid SVGs?
+        A. No idea? Pass through unchanged?
+        There should be some notification, no quiet failures.
+        (Is that a failure? -- Yes, any deviation from expected behavior should be explained)
+
+    - Q. What happens if there's no viewBox?
+        A. Pass through unchanged.
+        I don't want to try and derive a viewBox from potentially missing height/width attributes
+
+**NOTE** Name resolution is now bi-directional. So if an SVG file named **dash-case.svg** is registered, that file can be embedded by either `dash-case`, `dashCase`. Likewise, a file named **camelCase.svg** will be accessible by either `camelCase` or `camel-case.
+
+---
 
 [svgo]: https://www.npmjs.com/package/svgo
 [docker-build]: https://github.com/ideasonpurpose/docker-build
