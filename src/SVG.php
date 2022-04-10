@@ -2,7 +2,6 @@
 namespace IdeasOnPurpose\WP;
 
 use Doctrine\Inflector\InflectorFactory;
-use stdClass;
 
 /**
  * A library for embedding SVGs from the filesystem. Values are returned
@@ -38,6 +37,9 @@ class SVG
 
         $this->attributes = [];
         $this->inUse = [];
+
+        // Enable Shortcodes
+        new SVG\Shortcodes;
 
         add_action('pre_get_posts', [$this, 'registerQueryVar']);
         add_action('wp_footer', [$this, 'dumpSymbols']);

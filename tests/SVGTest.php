@@ -16,6 +16,7 @@ function error_log($err)
 
 /**
  * @covers \IdeasOnPurpose\WP\SVG
+ * @covers \IdeasOnPurpose\WP\SVG\Shortcodes
  */
 final class SVGTest extends TestCase
 {
