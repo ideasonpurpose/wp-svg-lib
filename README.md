@@ -18,15 +18,22 @@ _**Note:** Version 2.0.0 changed the namespace from `IdeasOnPurpose\SVG` to `Ide
 
 ## Instructions
 
-Initialize the library in your **functions.php** file like this:
+Initialize the library from a theme's **functions.php** file. Starting with version 3, the library looks for SVG files in the theme's `dist/images/svg` directory by default, so instantiation can look like this:
 
 ```php
-new IdeasOnPurpose\WP\SVG(__DIR__ . '/dist/images/svg');
+new IdeasOnPurpose\WP\SVG;
+
+// or use a custom path
+new IdeasOnPurpose\WP\SVG(get_theme_directory() . '/icons/svg');
 ```
 
-Every SVG file in that directory or its children will be registered. The library will also inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.
+Every SVG file in that directory or its children will be registered and available to template files. The library will inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.
 
-All SVGs are indexed by their filename and containing path.
+Install from [Packagist](https://packagist.org/packages/ideasonpurpose/wp-svg-lib), require it in **composer.json** or tell Composer to load the package:
+
+```bash
+$ composer require ideasonpurpose/wp-svg-lib
+```
 
 ### Embedding SVGs
 
@@ -42,7 +49,7 @@ That code outputs something like this:
 <div><svg viewBox="0 0 25 10">...</svg></div>
 ```
 
-The library will attempt to normalize all file names to camelCase to help with embedding. Directory separators will be replaced with double-underscores. Some examples:
+The library will normalize all file names to camelCase to help with embedding. Directory separators will be replaced with double-underscores. Some examples:
 
 ```php
 // the file 'icons/email-circle.svg' can be embedded as:
@@ -86,69 +93,85 @@ The library keeps a record of which files have been included like this, then inj
 
 This library adds the `/ideaosnpurpose/v1/svg` endpoint to the WP-JSON API.
 
-If either height or width are 'auto' then that value will be calculated from the aspect ratio and the opposite dimenision.
+Files can be requested by name like this:
 
-## Installation
+- https://example.com/ideasonpurpoose/v1/svg/arrowLeft
+- https://example.com/ideasonpurpoose/v1/svg/icons__email
 
-This library is available on [Packagist](https://packagist.org/packages/ideasonpurpose/wp-svg-lib), to use it, require it in **composer.json** or tell Composer to load the package:
+Dimensions and classes can be injected using query vars:
 
-```bash
-$ composer require ideasonpurpose/wp-svg-lib
+- https://example.com/ideasonpurpoose/v1/svg/arrowLeft?width=200&height=auto
+- https://example.com/ideasonpurpoose/v1/svg/icons__email&class=social+blue
+
+A listing of all registered SVGs is here:
+
+- https://example.com/ideasonpurpoose/v1/svg/
+
+If either height or width are 'auto' then that value will be calculated from the aspect ratio and the opposite dimension.
+
+Well-formed SVG files should return a data object like this:
+
+The `_links.raw` and `_links.clean` values return with `Content-type: image/svg+xml` headers and can be used to display the SVG file directly in the browser.
+
+```json
+{
+  "icons__email": {
+    "content": {
+      "raw": "<svg height=\"50\" width=\"48\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 496 512\"><path d=\"M16 32c0z\"/></path></svg>",
+      "clean": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 496 512\"><path d=\"M16 32c0z\"/></path></svg>\n"
+    },
+    "src": "dist/images/svg/icons/email.svg",
+    "_links": {
+      "self": "https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email",
+      "collection": "https://example.com/wp-json/ideasonpurpose/v1/svg",
+      "raw": "https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email.svg?raw",
+      "clean": "https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email.svg"
+    },
+    "width": 48,
+    "height": 50,
+    "aspect": 0.96
+  }
+}
+
 ```
 
-### Notes
+### Removed Attributes and Optimization
 
-SVG files are not optimized in any way. Please use something like [svgo][] or [our buildchain][docker-build] to optimize SVG files.
+All attributes except `viewBox` and `xmlns` are removed from`clean` valid SVG files, but the `raw` unmodified original files are also available.
 
-The **posttest** package.json script is a workaround to remap files paths because PHPUnit writes absolute paths into its coverage files. Since those paths are from inside a Docker image, they don't exist. I couldn't find another workaround which let me display coverage in VS Code.
+Invalid SVGs pass through to `raw` without modification. Error details will be added to the JSON data object.
 
----
+Other than the opening `<svg>` tag, vector data is not optimized in any way. Please use something like [svgo][] or [our buildchain][docker-build] to optimize SVG files.
 
-\*\*TODO: implement shortcode
+## Notes
+
+- Name resolution is bi-directional. An SVG file named **dash-case.svg** can be embedded by either `dash-case` or `dashCase`. Likewise, a file named **camelCase.svg** will be accessible by either `camelCase` or `camel-case`.
+
+## Shortcodes
+
+> _In Progress_
+
+SVGs can be included by authors and for Full Site Editing using shortcodes.
 
 ```
 [svg file-slug]
-
-[iop-svg file-slug height="23" width="auto"]
-[iop-svg src="fileSlug" height="23" width="auto" class="hello there"]
-
-// necessary to quote attributes? Even simple numbers?
+[svg file-slug height="23" width="auto"]
+[svg src="fileSlug" height="23" width="auto" class="hello there"]
 ```
 
-> WIP SVG REST API notes:
+#### _Notes_
 
-TODO: If the SVG can be parsed as XML, then we can read attributes
+- using `svg` as the Shortcode name may come back to haunt us. But I'd rather keep the shortcode simple and memorable.
+- Is it necessary to quote shortcode attributes?
 
-The goal would be to normalize dimensions, an potentially provide
-functionality to enforce dimensions.
+* What happens to invalid SVGs?
 
-eg. a request for /wp-json/ideasonpurpose/v1/svg/arrow?w=48
-would return the SVG with updated width/height tags, derived
-from the viewBox dimensions.
+  - A. No idea? Pass through unchanged?
+    There should be some notification, no quiet failures.
+    (Is that a failure? -- Yes, any deviation from expected behavior should be explained)
 
-If the raw opening tag looked like this:
-
-    <svg viewBox="0 0 150 100">
-
-The SVG API would return something this:
-
-    <svg width="48" height="32" viewBox="0 0 150 100">
-
-Questions: - Q. Should existing height/width tags be rewritten?
-A. yes, if explicitly requested.
-
-    - Q. What happens to invalid SVGs?
-        A. No idea? Pass through unchanged?
-        There should be some notification, no quiet failures.
-        (Is that a failure? -- Yes, any deviation from expected behavior should be explained)
-
-    - Q. What happens if there's no viewBox?
-        A. Pass through unchanged.
-        I don't want to try and derive a viewBox from potentially missing height/width attributes
-
-**NOTE** Name resolution is now bi-directional. So if an SVG file named **dash-case.svg** is registered, that file can be embedded by either `dash-case`, `dashCase`. Likewise, a file named **camelCase.svg** will be accessible by either `camelCase` or `camel-case.
-
----
+* What happens if there's no viewBox?
+  - ViewBox will be added if it can be derived from supplied `height` and `width` attributes. If there are no dimensions and no viewBox, nothing will be added to the opening `<svg>` tag.
 
 [svgo]: https://www.npmjs.com/package/svgo
 [docker-build]: https://github.com/ideasonpurpose/docker-build
