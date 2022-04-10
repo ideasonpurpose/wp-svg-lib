@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebec5c9d519a4dd7fbc09864ac5c4eea",
+    "content-hash": "350988bd46c0fe01bfa5ddc57c90efb9",
     "packages": [
         {
             "name": "doctrine/inflector",
@@ -242,12 +242,6 @@
                 "url": "https://github.com/ideasonpurpose/wp-test-stubs.git",
                 "reference": "19f7872e8195bd467020ebefdd0a650084782545"
             },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ideasonpurpose/wp-test-stubs/zipball/19f7872e8195bd467020ebefdd0a650084782545",
-                "reference": "19f7872e8195bd467020ebefdd0a650084782545",
-                "shasum": ""
-            },
             "require": {
                 "php": ">=8.0.0"
             },
@@ -258,13 +252,13 @@
                     "IdeasOnPurpose\\WP\\Test\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "authors": [
                 {
-                    "name": "Ideas On Purpose"
+                    "name": "Ideas On Purpose",
+                    "website": "https://www.ideasonpurpose.com"
                 },
                 {
                     "name": "Joe Maller",
@@ -272,10 +266,6 @@
                 }
             ],
             "description": "A simple collection of stubs and doubles for testing WordPress code.",
-            "support": {
-                "issues": "https://github.com/ideasonpurpose/wp-test-stubs/issues",
-                "source": "https://github.com/ideasonpurpose/wp-test-stubs/tree/main"
-            },
             "time": "2022-04-09T02:41:27+00:00"
         },
         {

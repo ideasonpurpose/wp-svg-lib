@@ -16,7 +16,7 @@ final class CaseNormalizationTest extends TestCase
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
         $this->SVG->init();
-        $this->SVG->is_debug = true;
+        $this->SVG->WP_DEBUG = true;
     }
 
     /**

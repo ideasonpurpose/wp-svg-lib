@@ -104,6 +104,17 @@ The **posttest** package.json script is a workaround to remap files paths becaus
 
 ---
 
+\*\*TODO: implement shortcode
+
+```
+[svg file-slug]
+
+[iop-svg file-slug height="23" width="auto"]
+[iop-svg src="fileSlug" height="23" width="auto" class="hello there"]
+
+// necessary to quote attributes? Even simple numbers?
+```
+
 > WIP SVG REST API notes:
 
 TODO: If the SVG can be parsed as XML, then we can read attributes

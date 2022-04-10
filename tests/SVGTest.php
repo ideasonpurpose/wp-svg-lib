@@ -36,6 +36,21 @@ final class SVGTest extends TestCase
         );
     }
 
+    public function testInit_transient()
+    {
+        global $transients;
+
+        $this->SVG->WP_DEBUG = false;
+        $this->SVG->transient = 'transient_id';
+        $transients = [$this->SVG->transient => []];
+
+        $this->SVG->init();
+
+        $this->assertArrayHasKey('_from_transient', $this->SVG->lib);
+        $this->assertArrayHasKey('_processing_time', $this->SVG->lib);
+        $this->assertTrue($this->SVG->lib['_from_transient']);
+    }
+
     public function testEmbed()
     {
         $arrow = $this->SVG->embed('arrow');
@@ -44,6 +59,17 @@ final class SVGTest extends TestCase
         $nope = $this->SVG->embed('nope');
         $this->assertNull($nope);
 
+        /**
+         * Make sure _from_transient and _processing_time
+         */
+        $nope = $this->SVG->embed('_from_transient');
+        $this->assertNull($nope);
+
+        $nope = $this->SVG->embed('_processing_time');
+        $this->assertNull($nope);
+
+        $actual = $this->getActualOutput();
+        $this->assertStringContainsString('<!-- SVG Lib Error', $actual);
         $this->expectOutputRegex('/<!-- SVG Lib Error/');
     }
 
@@ -92,7 +118,7 @@ final class SVGTest extends TestCase
         global $is_user_logged_in;
 
         $is_user_logged_in = true;
-        $this->SVG->is_debug = false;
+        $this->SVG->WP_DEBUG = false;
         $this->SVG->dumpSymbols();
 
         $actual = $this->getActualOutput();
@@ -110,7 +136,7 @@ final class SVGTest extends TestCase
         global $is_user_logged_in;
 
         $is_user_logged_in = true;
-        $this->SVG->is_debug = true;
+        $this->SVG->WP_DEBUG = true;
         $this->SVG->dumpSymbols();
 
         $actual = $this->getActualOutput();
@@ -212,5 +238,28 @@ final class SVGTest extends TestCase
         $emptyLib->registerQueryVar();
         $actual = array_pop($query_var);
         $this->assertNull($actual);
+    }
+
+    public function testCleanSvg()
+    {
+        $actual = $this->SVG->cleanSvg('nope');
+        $this->assertNull($actual);
+        $output = $this->getActualOutput();
+
+        $this->expectOutputRegex('/<!-- SVG Lib Error/');
+
+        $this->SVG->attributes = ['width' => 123];
+        $this->SVG->cleanSvg('arrow');
+        $this->assertObjectHasAttribute('clean_json', $this->SVG->lib['arrow']->_links);
+    }
+
+    public function testCleanSvg_error()
+    {
+        $this->SVG->lib['bad'] = (object) [
+            'src' => 'fake/file/path.svg',
+            'content' => (object) ['raw' => '<svg><g>'],
+        ];
+        $this->SVG->cleanSvg('bad');
+        $this->assertObjectHasAttribute('errors', $this->SVG->lib['bad']);
     }
 }

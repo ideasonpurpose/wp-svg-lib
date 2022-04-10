@@ -27,7 +27,7 @@ class SVG
 
     public function __construct($libDir = null)
     {
-        $this->is_debug = defined('WP_DEBUG') && WP_DEBUG;
+        $this->WP_DEBUG = defined('WP_DEBUG') && WP_DEBUG;
 
         $this->libDir = $libDir ?? get_template_directory() . '/dist/images/svg';
         $this->transient = get_class($this) . ':' . $this->libDir;
@@ -39,27 +39,24 @@ class SVG
         $this->attributes = [];
         $this->inUse = [];
 
-        \Kint::$mode_default = \Kint::MODE_CLI;
-        error_log(@d(get_class($this), $this->transient));
-        \Kint::$mode_default = \Kint::MODE_RICH;
-
-        // $this->request_width = $_GET['width'] ?? false;
-        // $this->request_height = $_GET['height'] ?? false;
-
-        // d($this->lib);
-        // // TODO: Should this only happen if there are SVGs in the library?
-        // //       How to make sure they appear if a second directory is loaded?
-
-        // add_action('pre_get_posts', function () {
-        //     set_query_var('SVG', $this);
-        // });
-
         add_action('pre_get_posts', [$this, 'registerQueryVar']);
         add_action('wp_footer', [$this, 'dumpSymbols']);
 
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_loaded', [$this, 'init']);
     }
+
+    /**
+     * Isolate calls to `exit` so we can run PHPUnit without exiting
+     * All this does is die.
+     *
+     * @codeCoverageIgnore
+     */
+    public function exit()
+    {
+        exit();
+    }
+
 
     /**
      * Initialization is stored in a transient since this stuff rarely changes and
@@ -73,20 +70,21 @@ class SVG
         /**
          * Disable transients when WP_DEBUG is true
          */
-        if ($this->is_debug === true) {
+        if ($this->WP_DEBUG === true) {
             $this->lib = false;
         }
 
         if ($this->lib === false) {
             $this->loadFromDirectory($this->libDir);
             $this->libfill();
-            // ksort($this->lib);  // TODO: move this into the load/fill functions?
             $this->lib['_from_transient'] = false;
 
             set_transient($this->transient, $this->lib, 12 * HOUR_IN_SECONDS);
         } else {
+            // TODO: Need to check for an SVG named _from_transient and not stomp it
             $this->lib['_from_transient'] = true;
         }
+        // TODO: Need to check for an SVG named _processing_time and not stomp it either
         $this->lib['_processing_time'] = sprintf('%04fs', microtime(true) - $startTime);
     }
 
@@ -129,32 +127,6 @@ class SVG
             }
         }
         ksort($this->lib);
-    }
-
-    /**
-     * This is only called if the file already exists and is confirmed to have an '.svg' extension
-     */
-    public function ingestSVG($filepath)
-    {
-        $svg = new \stdClass();
-        $raw = trim(file_get_contents($filepath));
-
-        $svg->content = (object) ['raw' => $raw];
-
-        /**
-         * NOTE: add_query_arg url-encodes the 'raw' rest_route with plain permalinks. Annoying, but it's happening
-         *       in native json-api endpoints too, so let's just live with it until someone fixes it upstream
-         */
-        $svg->_links = (object) [
-            'self' => get_rest_url(null, "{$this->rest_base}/" . basename($filepath, '.svg')),
-            'collection' => get_rest_url(null, "{$this->rest_base}"),
-            'raw' => add_query_arg(
-                ['raw' => ''],
-                get_rest_url(null, "{$this->rest_base}/" . basename($filepath))
-            ),
-        ];
-
-        return $svg;
     }
 
     /**
@@ -354,7 +326,7 @@ class SVG
         $key = $this->normalizeKey($name);
 
         if (!array_key_exists($key, $this->lib) || !property_exists($this->lib[$key], 'content')) {
-            if ($this->is_debug) {
+            if ($this->WP_DEBUG) {
                 $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
                 error_log($error);
                 echo "\n<!-- $error -->\n\n";
@@ -520,7 +492,7 @@ class SVG
             if (is_user_logged_in()) {
                 echo "<!-- NO SVGs IN USE -->\n";
 
-                if ($this->is_debug) {
+                if ($this->WP_DEBUG) {
                     $trace = array_map(fn($i) => $i['file'] . ':' . $i['line'], debug_backtrace());
                     $trace = implode("\n\t", $trace);
                     printf("<!-- SVG::dumpSymbols call stack:\n\t%s\n -->\n", $trace);
@@ -531,14 +503,11 @@ class SVG
 
     /**
      * Register REST routes to return SVG listings and individual files
+     *
+     * Note that rest_route declaration order matters. Rules with the most specificity should appear first
      */
-
     public function registerRestRoutes()
     {
-        /**
-         * Note that rest_route declaration order matters. Rules with the most specificity should appear first
-         */
-
         register_rest_route('ideasonpurpose/v1', '/svg/(?P<name>[^/]*)\.svg', [
             'methods' => \WP_REST_Server::READABLE,
             'callback' => [$this, 'returnSvgFile'],
@@ -569,7 +538,7 @@ class SVG
 
         if ($this->hasSVG($name)) {
             // TODO: DEBUG ENABLE THIS
-            // header('Content-type: image/svg+xml');
+            header('Content-type: image/svg+xml');
 
             $this->cleanSvg($name);
             if ($is_raw && $this->lib[$name]->content->clean) {
@@ -578,7 +547,7 @@ class SVG
                 $svg = $this->lib[$name]->content->clean;
             }
 
-            die($svg);
+            return $this->exit($svg);
         }
     }
 
@@ -593,8 +562,13 @@ class SVG
             return rest_ensure_response($this->lib[$name]);
         }
 
-        // TODO: Clean/normalize entire library
         foreach (array_keys($this->lib) as $name) {
+            /**
+             * Skip keys starting with underscores (debug info)
+             */
+            if (substr($name, 0, 1) == '_') {
+                continue;
+            }
             $this->cleanSvg($name);
         }
         return rest_ensure_response($this->lib);
