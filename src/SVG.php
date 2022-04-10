@@ -236,10 +236,12 @@ class SVG
         /**
          * Restore viewBox width/height and class attributes
          */
-        if (count($viewBox) != 4) {
+        if (count($viewBox) != 4 && $width && $height) {
             $viewBox = [0, 0, $width, $height];
         }
-        $xml->addAttribute('viewBox', implode(' ', $viewBox));
+        if (count($viewBox) === 4) {
+            $xml->addAttribute('viewBox', implode(' ', $viewBox));
+        }
 
         if ($newWidth == 'auto' && $newHeight == 'auto') {
             $newWidth = $width;

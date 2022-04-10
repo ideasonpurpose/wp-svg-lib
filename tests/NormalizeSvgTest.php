@@ -64,15 +64,19 @@ final class NormalizeSvgTest extends TestCase
         $this->assertIsInt($actual->height);
     }
 
-
     public function testAddClasses()
     {
         $this->SVG->attributes = ['class' => 'red green blue'];
 
         $file = '<svg viewBox="0 0 36 48"></svg>';
         $actual = $this->SVG->normalizeSvg($file);
-        d($actual);
         $this->assertStringContainsString('red', $actual->content);
     }
 
+    public function testNoDimenionsOrViewBox()
+    {
+        $file = '<svg></svg>';
+        $actual = $this->SVG->normalizeSvg($file);
+        $this->assertStringNotContainsString('viewBox', $actual->content);
+    }
 }
