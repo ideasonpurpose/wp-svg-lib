@@ -57,7 +57,6 @@ class SVG
         exit();
     }
 
-
     /**
      * Initialization is stored in a transient since this stuff rarely changes and
      * there's no need to burn CPU cycles to re-generate this on every request.
@@ -268,7 +267,7 @@ class SVG
         }
 
         // DEBUG FOR VISIBILITY
-        $xml->addAttribute('style', 'border: 1px dotted cyan');
+        // $xml->addAttribute('style', 'border: 1px dotted cyan');
 
         /**
          * Remove the XML Declaration
@@ -276,8 +275,8 @@ class SVG
         $clean = preg_replace('/^<\?xml[^<]+/mi', '', $xml->asXML());
 
         $output = (object) [
-            'height' => $height,
-            'width' => $width,
+            'height' => intval($height),
+            'width' => intval($width),
             'aspect' => $aspect,
             'content' => $clean,
         ];
@@ -286,6 +285,9 @@ class SVG
 
     /**
      * Returns a REST-safe key name. Can be round-tripped and will always return a sa
+     *
+     * Normalize keys to camelCase then replace path-separators with double-underscores
+     * If the key does not already exist in $this->lib, link the new key to the original
      *
      * Preserves double-underscore directory separators
      * @return string
@@ -301,22 +303,6 @@ class SVG
         $newKey = implode('__', $keyParts);
         return $newKey;
     }
-    // /**
-    //  * Normalize keys to camelCase then replace path-separators with double-underscores
-    //  * If the key does not already exist in $this->lib, link the new key to the original
-    //  */
-    // private function libNormalizeKeys()
-    // {
-    //     $inflector = InflectorFactory::create()->build();
-    //     foreach ($this->lib as $key => $svg) {
-    //         // $newKey = $inflector->camelize($key);
-    //         // $newKey = preg_replace('/\//', '__', $newKey);
-    //         $newKey = $this->normalizeKey($key);
-    //         if (!array_key_exists($newKey, $this->lib)) {
-    //             $this->lib[$newKey] = $this->lib[$key];
-    //         }
-    //     }
-    // }
 
     /**
      * Check if SVG exists and prints debugging messages if missing
