@@ -52,9 +52,9 @@ class SVG
      *
      * @codeCoverageIgnore
      */
-    public function exit()
+    public function exit($content)
     {
-        exit();
+        exit($content);
     }
 
     /**
