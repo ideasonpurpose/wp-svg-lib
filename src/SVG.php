@@ -39,7 +39,7 @@ class SVG
         $this->inUse = [];
 
         // Enable Shortcodes
-        new SVG\Shortcodes;
+        new SVG\Shortcodes();
 
         add_action('pre_get_posts', [$this, 'registerQueryVar']);
         add_action('wp_footer', [$this, 'dumpSymbols']);
@@ -186,13 +186,19 @@ class SVG
      */
     public function normalizeSvg($rawSVGString)
     {
-        $newWidth ??= @$this->attributes['width'];
-        $newHeight ??= @$this->attributes['height'];
-
         $clean = null;
+        $aspect = 1;
         $width = null;
         $height = null;
-        $aspect = 1;
+        $newWidth = null;
+        $newHeight = null;
+
+        if (array_key_exists('width', $this->attributes)) {
+            $newWidth = $this->attributes['width'];
+        }
+        if (array_key_exists('height', $this->attributes)) {
+            $newHeight = $this->attributes['height'];
+        }
 
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string($rawSVGString);
@@ -266,7 +272,7 @@ class SVG
             $xml->addAttribute('height', $newHeight);
         }
 
-        if (@$this->attributes['class']) {
+        if (array_key_exists('class', $this->attributes)) {
             $xml->addAttribute('class', $this->attributes['class']);
         }
 
