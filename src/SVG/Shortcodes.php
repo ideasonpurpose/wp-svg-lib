@@ -6,8 +6,8 @@ class Shortcodes
 {
     public function __construct()
     {
-        // add_action('init', [$this, 'addShortcodes']);
-        $this->addShortcodes();
+        add_action('init', [$this, 'addShortcodes']);
+        // $this->addShortcodes();
 
     }
 
@@ -45,11 +45,22 @@ class Shortcodes
      */
     public function embedSvg(array $atts, ?string $content = '')
     {
+        global $SVG;
         \Kint::$mode_default = \Kint::MODE_CLI;
         error_log(@d($atts, $content));
         \Kint::$mode_default = \Kint::MODE_RICH;
 
-        return '<strong>SVG GOES HERE</strong>';
+
+        $src = $atts['src'] ?? $atts[0] ?? null;
+
+        $width = $atts['width'] ?? null;
+        $height = $atts['height'] ?? null;
+        $class = $atts['class'] ?? null;
+
+        if ($src){
+        // TODO Can we get to the SVG library?
+return $SVG->embed($src, $width, $height, $class);}
+        // return '<strong>SVG GOES HERE'. json_encode($atts) .' </strong>';
 
         // $munged_mail = antispambot($atts[0]);
         // $content = ($content) ?: $munged_mail;

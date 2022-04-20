@@ -193,12 +193,8 @@ class SVG
         $newWidth = null;
         $newHeight = null;
 
-        if (array_key_exists('width', $this->attributes)) {
-            $newWidth = $this->attributes['width'];
-        }
-        if (array_key_exists('height', $this->attributes)) {
-            $newHeight = $this->attributes['height'];
-        }
+        $newWidth = $this->attributes['width'] ?? null;
+        $newHeight = $this->attributes['height'] ?? null;
 
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string($rawSVGString);
@@ -213,8 +209,8 @@ class SVG
         /**
          * If the attributes don't exist, they return empty strings, failover to null
          */
-        $width = (string) $xml->attributes()->width ?: null;
-        $height = (string) $xml->attributes()->height ?: null;
+        $width = (string) $xml->attributes()->width ?? null;
+        $height = (string) $xml->attributes()->height ?? null;
 
         $viewBox = explode(' ', $xml->attributes()->viewBox);
 
@@ -272,8 +268,9 @@ class SVG
             $xml->addAttribute('height', $newHeight);
         }
 
-        if (array_key_exists('class', $this->attributes)) {
-            $xml->addAttribute('class', $this->attributes['class']);
+        $class = $this->attributes['class'] ?? false;
+        if ($class) {
+            $xml->addAttribute('class', $class);
         }
 
         // DEBUG FOR VISIBILITY
@@ -341,16 +338,22 @@ class SVG
      * Inline SVGs directly by name
      * '.svg' extensions are stripped, so 'arrow' and 'arrow.svg' will both return the 'arrow.svg' file
      */
-    public function embed($key)
+    public function embed($key, $width = null, $height = null, $class = null)
     {
         $name = $this->normalizeKey($key);
+        $this->attributes['width'] = $width;
+        $this->attributes['height'] = $height;
+        $this->attributes['class'] = $class;
 
+        // TODO: Possible to use cleanSVG as the check? since that runs hasSVG internally?
         if ($this->hasSVG($name)) {
-            $key = $this->normalizeKey($name);
-            if (property_exists($this->lib[$key]->content, 'clean')) {
-                return $this->lib[$key]->content->clean;
+            $this->cleanSvg($name);
+
+            if (property_exists($this->lib[$name]->content, 'clean')) {
+                return $this->lib[$name]->content->clean;
             }
-            return $this->lib[$key]->content->raw;
+            // TODO: this can be merged with the above into a single return statement using null-coalescing
+            return $this->lib[$name]->content->raw;
         }
     }
 
