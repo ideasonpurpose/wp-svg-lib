@@ -38,14 +38,15 @@ class SVG
         $this->attributes = [];
         $this->inUse = [];
 
-        // Enable Shortcodes
-        new SVG\Shortcodes();
+        $this->shortcode = 'svg';
 
         add_action('pre_get_posts', [$this, 'registerQueryVar']);
         add_action('wp_footer', [$this, 'dumpSymbols']);
 
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
         add_action('wp_loaded', [$this, 'init']);
+
+        add_action('init', [$this, 'addShortcode']);
     }
 
     /**
@@ -82,10 +83,9 @@ class SVG
 
             set_transient($this->transient, $this->lib, 12 * HOUR_IN_SECONDS);
         } else {
-            // TODO: Need to check for an SVG named _from_transient and not stomp it
+            // Note: This is safe because normalized keys will never start with an underscore, so this
             $this->lib['_from_transient'] = true;
         }
-        // TODO: Need to check for an SVG named _processing_time and not stomp it either
         $this->lib['_processing_time'] = sprintf('%04fs', microtime(true) - $startTime);
     }
 
@@ -117,6 +117,8 @@ class SVG
                 $this->lib[$key] = (object) [
                     'content' => (object) ['raw' => trim(file_get_contents($file->getRealPath()))],
                     // TODO: maybe use get_theme_root instead of get_template_directory?
+                    // @link  https://developer.wordpress.org/reference/functions/get_theme_root/
+                    // @link  https://developer.wordpress.org/reference/functions/get_template_directory/
                     'src' => str_replace(get_template_directory() . '/', '', $file->getRealPath()),
                     '_links' => (object) [
                         'self' => $restSelf,
@@ -134,7 +136,12 @@ class SVG
      * TODO: Needs a better name, this is sort of a wrapper/processor for normalizeSvg
      *
      * The main reason for this is so we can re-normalize SVGs with new sizes on demand.
-     * This uses names of existing SVG files, where normalize
+     * This uses names of existing SVG files, normalizeSvg takes a string of SVG content
+     *
+     * Properties of the Object returned by NormalizeSvg are added to the content in lib
+     *
+     * @return String As a convenience, return the normalized "clean" SVG content if available
+     *                Otherwise an empty string
      *
      */
     public function cleanSvg($name)
@@ -179,10 +186,19 @@ class SVG
                 'libxml' => $cleanSvg->error,
             ];
         }
+        return $cleanSvg->content ?? '';
     }
 
     /**
+     *
      * Returns an object containing the following:
+     */
+
+    /**
+     * normalizeSvg
+     *
+     * @param  string $rawSVGString - A blob of SVG content
+     * @return object {'height' => Integer, 'width' => Integer, 'aspect' => Float, 'content' => String}
      */
     public function normalizeSvg($rawSVGString)
     {
@@ -345,15 +361,8 @@ class SVG
         $this->attributes['height'] = $height;
         $this->attributes['class'] = $class;
 
-        // TODO: Possible to use cleanSVG as the check? since that runs hasSVG internally?
         if ($this->hasSVG($name)) {
-            $this->cleanSvg($name);
-
-            if (property_exists($this->lib[$name]->content, 'clean')) {
-                return $this->lib[$name]->content->clean;
-            }
-            // TODO: this can be merged with the above into a single return statement using null-coalescing
-            return $this->lib[$name]->content->raw;
+            return $this->cleanSvg($name) ?? $this->lib[$name]->content->raw;
         }
     }
 
@@ -449,6 +458,8 @@ class SVG
      * In the future, this can be refactored away and SVG content can be directly entered into $this->lib
      *
      * Note: `get_class_vars(get_called_class())` pulls static vars in from the child class
+     *
+     * @deprecated
      */
     private function libFill()
     {
@@ -457,13 +468,29 @@ class SVG
         foreach ($static_vars as $key => $svg) {
             if (is_string($svg) && substr($svg, 0, 4) == '<svg') {
                 $newKey = $this->normalizeKey($key);
-                $this->lib[$newKey] = (object) ['content' => (object) ['raw' => $svg]];
+
+                /**
+                 * This is copied directly from $this-loadFromDirectory
+                 * Loading Static SVGs from a child class is deprecated,
+                 * so all of this will eventually go away
+                 */
+                $restSelf = get_rest_url(null, "{$this->rest_base}/{$key}");
+
+                $this->lib[$newKey] = (object) [
+                    'content' => (object) ['raw' => $svg],
+                    '_links' => (object) [
+                        'self' => $restSelf,
+                        'collection' => get_rest_url(null, "{$this->rest_base}"),
+                        'raw' => add_query_arg(['raw' => ''], $restSelf . '.svg'),
+                    ],
+                ];
                 $has_static_vars = true;
             }
         }
         // Only sort if static vars have been added
         if ($has_static_vars) {
             ksort($this->lib);
+            echo "\n\n<!-- Loading SVGs from static child classes is deprecated. Load from a directory instead. --> ";
         }
     }
 
@@ -536,7 +563,7 @@ class SVG
         $is_raw = !is_null($raw) && !in_array(strtolower($raw), ['0', 'no', 'false']);
 
         if ($this->hasSVG($name)) {
-            // TODO: DEBUG ENABLE THIS
+            // NOTE: Disable this to debug SVG contents in the browser
             header('Content-type: image/svg+xml');
 
             $this->cleanSvg($name);
@@ -594,6 +621,47 @@ class SVG
         $class = esc_attr(@$params['class']);
         if ($class) {
             $this->attributes['class'] = $class;
+        }
+    }
+
+    /**
+     * Register Shortcode
+     * @codeCoverageIgnore
+     */
+    public function addShortcode()
+    {
+        if (!shortcode_exists($this->shortcode)) {
+            add_shortcode($this->shortcode, [$this, 'svgShortcode']);
+        }
+    }
+
+    /**
+     * Embed SVG shortcode
+     *
+     * This is basically just a wrapper for SVG::embed
+     *
+     * Example 1: [svg file-slug]
+     *
+     * Example 2: [svg file-slug height="23" width="auto"]
+     *
+     * Example 3: [svg src="fileSlug" height="23" width="auto" class="hello there"]
+     *
+     * TODO: Can Attribute validation be handled by the SVG class??
+     */
+    public function svgShortcode(array $atts, ?string $content = '')
+    {
+        // global $SVG;
+        // \Kint::$mode_default = \Kint::MODE_CLI;
+        // error_log(@d($atts, $content));
+        // \Kint::$mode_default = \Kint::MODE_RICH;
+
+        $src = $atts['src'] ?? ($atts[0] ?? null);
+        $width = $atts['width'] ?? null;
+        $height = $atts['height'] ?? null;
+        $class = $atts['class'] ?? null;
+
+        if ($src) {
+            return $this->embed($src, $width, $height, $class);
         }
     }
 }

@@ -16,7 +16,6 @@ function error_log($err)
 
 /**
  * @covers \IdeasOnPurpose\WP\SVG
- * @covers \IdeasOnPurpose\WP\SVG\Shortcodes
  */
 final class SVGTest extends TestCase
 {
@@ -218,6 +217,8 @@ final class SVGTest extends TestCase
 
         $svg = $static->arrowStatic;
         $this->assertStringContainsString('<svg', $svg);
+
+        $this->expectOutputRegex('/Loading SVGs from static child classes is deprecated/');
     }
 
     /**

@@ -10,15 +10,22 @@ Test\Stubs::init();
 
 
 /**
- * @covers \IdeasOnPurpose\WP\SVG\Shortcodes
+ * @covers \IdeasOnPurpose\WP\SVG
  */
 final class ShortcodeTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $this->SVG->init();
+    }
+
     public function testEmbedSvg()
     {
-        $Shortcodes = new SVG\Shortcodes();
-        $actual = $Shortcodes->embedSvg(['a' => 12, 'b' => 'abc'], 'text');
+        $actual = $this->SVG->svgShortcode(['arrow']);
+        $expected = $this->SVG->lib['arrow']->content->clean;
 
-        $this->assertEquals('hello', $actual);
+        $this->assertEquals($expected, $actual);
+        $this->assertStringContainsString('<svg', $actual);
     }
 }

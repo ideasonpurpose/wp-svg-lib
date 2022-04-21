@@ -58,8 +58,6 @@ final class RestApiTest extends TestCase
      */
     public function testReturnSvgFile(): void
     {
-        // TODO: It would be nice if this could check for headers sent too?
-
         $mockSvg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->onlyMethods(['exit'])
             ->getMock();
@@ -72,12 +70,20 @@ final class RestApiTest extends TestCase
         $mockSvg->init();
 
         $req = new WP_REST_Request(['name' => 'arrow']);
+        /** @var String $actual */
         $actual = $mockSvg->returnSvgFile($req);
         $this->assertStringContainsString('<svg xmlns', $actual);
 
         $req = new WP_REST_Request(['name' => 'arrow', 'raw' => true]);
+        /** @var String $actual */
         $actual = $mockSvg->returnSvgFile($req);
         $this->assertStringContainsString('<svg width', $actual);
+
+        /**
+         * @link https://stackoverflow.com/a/39892373/503463
+         */
+        $actual = xdebug_get_headers();
+        $this->assertStringContainsString('image/svg+xml', $actual[0]);
     }
 
     public function testRestResponse(): void

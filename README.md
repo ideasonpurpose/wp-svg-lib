@@ -159,6 +159,14 @@ SVGs can be included by authors and for Full Site Editing using shortcodes.
 [svg src="fileSlug" height="23" width="auto" class="hello there"]
 ```
 
+A single bare attribute will be treated as the source, but the shortcode prefers named attributes and if a shortcode contains both, the named `src` attribute will override the positional info.
+
+In this example, the `square` SVG will be shown:
+
+```
+[svg circle src="square"]
+```
+
 #### _Notes_
 
 - using `svg` as the Shortcode name may come back to haunt us. But I'd rather keep the shortcode simple and memorable.
