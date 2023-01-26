@@ -74,7 +74,7 @@ For convenience, SVG files can be embedded with or without their file extension.
 
 SVGs can also be injected as linked symbols, where most all of the markup only appears once. This can be useful for simple elements which appear repeatedly:
 
-```html
+```php
 <a href="#"><?= $SVG->get('arrow') ?>Go!</a>
 ```
 
@@ -91,27 +91,25 @@ The library keeps a record of which files have been included like this, then inj
 
 ## REST API
 
-This library adds the `/ideaosnpurpose/v1/svg` endpoint to the WP-JSON API.
+This library adds the `/ideasonpurpose/v1/svg` endpoint to the WP-JSON API.
 
 Files can be requested by name like this:
 
-- https://example.com/ideasonpurpoose/v1/svg/arrowLeft
-- https://example.com/ideasonpurpoose/v1/svg/icons__email
+- https://example.com/ideasonpurpose/v1/svg/arrowLeft
+- https://example.com/ideasonpurpose/v1/svg/icons__email
 
 Dimensions and classes can be injected using query vars:
 
-- https://example.com/ideasonpurpoose/v1/svg/arrowLeft?width=200&height=auto
-- https://example.com/ideasonpurpoose/v1/svg/icons__email&class=social+blue
+- https://example.com/ideasonpurpose/v1/svg/arrowLeft?width=200&height=auto
+- https://example.com/ideasonpurpose/v1/svg/icons__email&class=social+blue
 
 A listing of all registered SVGs is here:
 
-- https://example.com/ideasonpurpoose/v1/svg/
+- https://example.com/ideasonpurpose/v1/svg/
 
 If either height or width are 'auto' then that value will be calculated from the aspect ratio and the opposite dimension.
 
 Well-formed SVG files should return a data object like this:
-
-The `_links.raw` and `_links.clean` values return with `Content-type: image/svg+xml` headers and can be used to display the SVG file directly in the browser.
 
 ```json
 {
@@ -132,8 +130,9 @@ The `_links.raw` and `_links.clean` values return with `Content-type: image/svg+
     "aspect": 0.96
   }
 }
-
 ```
+
+The `_links.raw` and `_links.clean` values (endpoints include the `.svg` extension) will return with `Content-type: image/svg+xml` headers and can be used to display the SVG file directly in the browser. 
 
 ### Removed Attributes and Optimization
 
@@ -161,7 +160,7 @@ SVGs can be included by authors and for Full Site Editing using shortcodes.
 
 A single bare attribute will be treated as the source, but the shortcode prefers named attributes and if a shortcode contains both, the named `src` attribute will override the positional info.
 
-In this example, the `square` SVG will be shown:
+In this example, the `square` SVG will be shown instead of `circle`:
 
 ```
 [svg circle src="square"]
@@ -180,6 +179,12 @@ In this example, the `square` SVG will be shown:
 
 * What happens if there's no viewBox?
   - ViewBox will be added if it can be derived from supplied `height` and `width` attributes. If there are no dimensions and no viewBox, nothing will be added to the opening `<svg>` tag.
+
+
+### Cleaning Quirks
+
+`<svg></svg` is a valid, though useless SVG document. Internally, the cleaner will returned zero for width and height, with an aspect ratio of 1. 
+
 
 [svgo]: https://www.npmjs.com/package/svgo
 [docker-build]: https://github.com/ideasonpurpose/docker-build

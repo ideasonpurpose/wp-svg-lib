@@ -14,7 +14,9 @@ Test\Stubs::init();
  */
 final class NormalizeSvgTest extends TestCase
 {
-    protected function setUp(): void
+    public $SVG;
+
+    public function setUp(): void
     {
         $this->SVG = new SVG();
     }
@@ -22,54 +24,81 @@ final class NormalizeSvgTest extends TestCase
     public function testNoViewbox()
     {
         $file = '<svg height="25" width="40"></svg>';
+        $expected = '<svg viewBox="0 0 40 25"/>';
         $actual = $this->SVG->normalizeSvg($file);
-        $this->assertStringContainsString('viewBox', $actual->content);
+
+        $this->assertEquals($expected, $actual->content);
+        $this->assertEquals(40, $actual->width);
+        $this->assertEquals(25, $actual->height);
     }
 
     public function testAutoWidth()
     {
-        $newHeight = 123;
-        $this->SVG->attributes = ['width' => 'auto', 'height' => $newHeight];
+        $x = 2;
+        $y = 4;
+        $width = 36;
+        $height = 48;
+        $viewBox = "{$x} {$y} {$width} {$height}";
+        $file = sprintf('<svg viewBox="%s"></svg>', $viewBox);
 
-        $file = '<svg viewBox="0 0 36 48"></svg>';
-        $actual = $this->SVG->normalizeSvg($file);
-        $this->assertEquals(36, $actual->width);
-        $this->assertStringContainsString("$newHeight", $actual->content);
+        $newHeight = 120;
+        $autoWidth = ($width / $height) * $newHeight;
+        $expected = sprintf('<svg viewBox="%s" width="%d" height="%d"/>', $viewBox, $autoWidth, $newHeight);
+        $args = ['width' => 'auto', 'height' => $newHeight];
+
+        $actual = $this->SVG->normalizeSvg($file, $args);
+
+        $this->assertStringContainsString("height=\"{$newHeight}\"", $actual->content);
+        $this->assertStringContainsString("width=\"{$autoWidth}\"", $actual->content);
+        $this->assertEquals($expected, $actual->content);
+        $this->assertEquals($autoWidth, $actual->width);
+        $this->assertEquals($newHeight, $actual->height);
     }
 
     public function testAutoHeight()
     {
-        $this->SVG->attributes = ['height' => 'auto'];
-
         $file = '<svg viewBox="0 0 36 48"></svg>';
-        $actual = $this->SVG->normalizeSvg($file);
+        $expected = '<svg viewBox="0 0 36 48" height="48"/>';
+        $args = ['height' => 'auto'];
+
+        $actual = $this->SVG->normalizeSvg($file, $args);
+        $this->assertEquals($expected, $actual->content);
         $this->assertEquals(48, $actual->height);
     }
 
     public function testDoubleAuto()
     {
-        $this->SVG->attributes = ['width' => 'auto', 'height' => 'auto'];
+        $args = ['width' => 'auto', 'height' => 'auto'];
 
-        $file = '<svg viewBox="0 0 36 48"></svg>';
-        $actual = $this->SVG->normalizeSvg($file);
+        $file = '<svg viewBox="10 10 100 50"></svg>';
+        $expected = '<svg viewBox="10 10 100 50" width="100" height="50"/>';
+
+        $actual = $this->SVG->normalizeSvg($file, $args);
+        $this->assertEquals($expected, $actual->content);
+
         $this->assertStringContainsString('viewBox', $actual->content);
     }
 
     public function testDimensionsAreIntegers()
     {
-        $file = '<svg height="25" width="40"></svg>';
+        $width = 40;
+        $height  = 25;
+        $file = sprintf('<svg width="%d" height="%d"></svg>', $width, $height);
         $actual = $this->SVG->normalizeSvg($file);
 
         $this->assertIsInt($actual->width);
+        $this->assertEquals($width, $actual->width);
+
         $this->assertIsInt($actual->height);
+        $this->assertEquals($height, $actual->height);
     }
 
     public function testAddClasses()
     {
-        $this->SVG->attributes = ['class' => 'red green blue'];
+        $args = ['class' => 'red green blue'];
 
         $file = '<svg viewBox="0 0 36 48"></svg>';
-        $actual = $this->SVG->normalizeSvg($file);
+        $actual = $this->SVG->normalizeSvg($file, $args);
         $this->assertStringContainsString('red', $actual->content);
     }
 

@@ -19,7 +19,9 @@ function error_log($err)
  */
 final class SVGTest extends TestCase
 {
-    protected function setUp(): void
+    public $SVG;
+
+    public function setUp(): void
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
         $this->SVG->init();
@@ -30,10 +32,7 @@ final class SVGTest extends TestCase
         $lib = $this->SVG->lib;
         // Loaded from filesystem
         $this->assertArrayHasKey('arrow', $lib);
-        $this->assertStringEqualsFile(
-            __DIR__ . '/fixtures/svg/arrow.svg',
-            $lib['arrow']->content->raw . "\n"
-        );
+        $this->assertStringEqualsFile(__DIR__ . '/fixtures/svg/arrow.svg', $lib['arrow']->content->raw . "\n");
     }
 
     public function testInit_transient()
@@ -246,12 +245,12 @@ final class SVGTest extends TestCase
     {
         $actual = $this->SVG->cleanSvg('nope');
         $this->assertNull($actual);
-        $output = $this->getActualOutput();
+        $this->getActualOutput();
 
         $this->expectOutputRegex('/<!-- SVG Lib Error/');
 
-        $this->SVG->attributes = ['width' => 123];
-        $this->SVG->cleanSvg('arrow');
+        $args = ['width' => 123];
+        $this->SVG->cleanSvg('arrow', $args);
         $this->assertObjectHasAttribute('clean_json', $this->SVG->lib['arrow']->_links);
     }
 
