@@ -43,6 +43,8 @@ class SVG
         $this->WP_DEBUG = defined('WP_DEBUG') && WP_DEBUG;
 
         $this->libDir = $libDir ?? get_template_directory() . '/dist/images/svg';
+
+        //TODO: Can we store the theme version in here to force a refresh when themes are updated?
         $this->transient = get_class($this) . ':' . $this->libDir;
 
         $this->rest_namespace = 'ideasonpurpose/v1';
@@ -77,6 +79,8 @@ class SVG
     /**
      * Initialization is stored in a transient since this stuff rarely changes and
      * there's no need to burn CPU cycles to re-generate this on every request.
+     *
+     * The library stored in a transient to reduce server load.
      */
     public function init()
     {
@@ -112,6 +116,9 @@ class SVG
 
     /**
      * Checks $dir for SVG files and includes any found using the files' baseName as the storage key.
+     *
+     * The raw file contents are stored initially, contents are validated and cleaned upon request.
+     *
      * NOTE: This uses $file->getPathname instead of basename to accommodate searching subdirectories
      */
     public function loadFromDirectory($dir)
@@ -261,17 +268,6 @@ class SVG
             $aspect = $width / $height;
         }
 
-        /**
-         * Restore viewBox width/height and class attributes
-         */
-        if (count($viewBox) != 4 && $width && $height) {
-            $viewBox = [0, 0, $width, $height];
-        }
-
-        if (count($viewBox) === 4) {
-            $xml->addAttribute('viewBox', implode(' ', $viewBox));
-        }
-
         if ($newWidth == 'auto' && $newHeight == 'auto') {
             $newWidth = $width;
             $newHeight = $height;
@@ -295,15 +291,20 @@ class SVG
             $xml->addAttribute('height', $newHeight);
         }
 
-        // TOOD: remove this->attributes;
-        // $class = $attributes['class'] ?? false;
+        /**
+         * Restore viewBox width/height
+         */
+        if (count($viewBox) != 4 && $width && $height) {
+            $viewBox = [0, 0, $width, $height];
+        }
+
+        if (count($viewBox) === 4) {
+            $xml->addAttribute('viewBox', implode(' ', $viewBox));
+        }
+
         if ($newClass) {
             $xml->addAttribute('class', $newClass);
         }
-
-        // $xml->addAttribute('FROG', 'kermit');
-        // DEBUG FOR VISIBILITY
-        // $xml->addAttribute('style', 'border: 1px dotted cyan');
 
         /**
          * Remove the XML Declaration
@@ -316,7 +317,7 @@ class SVG
             'aspect' => $aspect,
             'content' => trim($clean),
         ];
-        // d($output);
+
         return $output;
     }
 
@@ -382,7 +383,9 @@ class SVG
         $name = $this->normalizeKey($key);
 
         if ($this->hasSVG($name)) {
-            return $this->cleanSvg($name, $args) ?? $this->lib[$name]->content->raw;
+            // TODO: Is it possible for cleanSVG to return null?
+
+            return $this->cleanSvg($name, $args) ; //?? $this->lib[$name]->content->raw;
         }
     }
 
@@ -662,7 +665,7 @@ class SVG
      *
      * Example 3: [svg src="fileSlug" height="23" width="auto" class="hello there"]
      *
-     * TODO: Add test for bad attributes
+     * TODO:  Add test for bad attributes
      *          [svg src="45" ]
      *          [svg file-slug dog="Stella" class=""]
      *          [svg file-slug width="big" height=3.142856]

@@ -1,6 +1,4 @@
-<?php
-
-namespace IdeasOnPurpose\WP;
+<?php namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
@@ -32,6 +30,19 @@ final class NormalizeSvgTest extends TestCase
         $this->assertEquals(25, $actual->height);
     }
 
+    public function testRestoreViewbox()
+    {
+        $width = 36;
+        $height = 48;
+        $viewBox = "0 0 {$width} {$height}";
+
+        $file = '<svg></svg>';
+        $expected = sprintf('<svg width="%d" height="%d" viewBox="%s"/>', $width, $height, $viewBox);
+
+        $actual = $this->SVG->normalizeSvg($file, ['width' => $width, 'height' => $height]);
+        $this->assertEquals($expected, $actual->content);
+    }
+
     public function testAutoWidth()
     {
         $x = 2;
@@ -43,7 +54,7 @@ final class NormalizeSvgTest extends TestCase
 
         $newHeight = 120;
         $autoWidth = ($width / $height) * $newHeight;
-        $expected = sprintf('<svg viewBox="%s" width="%d" height="%d"/>', $viewBox, $autoWidth, $newHeight);
+        $expected = sprintf('<svg width="%d" height="%d" viewBox="%s"/>',  $autoWidth, $newHeight, $viewBox);
         $args = ['width' => 'auto', 'height' => $newHeight];
 
         $actual = $this->SVG->normalizeSvg($file, $args);
@@ -58,7 +69,7 @@ final class NormalizeSvgTest extends TestCase
     public function testAutoHeight()
     {
         $file = '<svg viewBox="0 0 36 48"></svg>';
-        $expected = '<svg viewBox="0 0 36 48" height="48"/>';
+        $expected = '<svg height="48" viewBox="0 0 36 48"/>';
         $args = ['height' => 'auto'];
 
         $actual = $this->SVG->normalizeSvg($file, $args);
@@ -71,7 +82,7 @@ final class NormalizeSvgTest extends TestCase
         $args = ['width' => 'auto', 'height' => 'auto'];
 
         $file = '<svg viewBox="10 10 100 50"></svg>';
-        $expected = '<svg viewBox="10 10 100 50" width="100" height="50"/>';
+        $expected = '<svg width="100" height="50" viewBox="10 10 100 50"/>';
 
         $actual = $this->SVG->normalizeSvg($file, $args);
         $this->assertEquals($expected, $actual->content);
@@ -82,7 +93,7 @@ final class NormalizeSvgTest extends TestCase
     public function testDimensionsAreIntegers()
     {
         $width = 40;
-        $height  = 25;
+        $height = 25;
         $file = sprintf('<svg width="%d" height="%d"></svg>', $width, $height);
         $actual = $this->SVG->normalizeSvg($file);
 
