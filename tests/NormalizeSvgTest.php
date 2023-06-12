@@ -54,7 +54,7 @@ final class NormalizeSvgTest extends TestCase
 
         $newHeight = 120;
         $autoWidth = ($width / $height) * $newHeight;
-        $expected = sprintf('<svg width="%d" height="%d" viewBox="%s"/>',  $autoWidth, $newHeight, $viewBox);
+        $expected = sprintf('<svg width="%d" height="%d" viewBox="%s"/>', $autoWidth, $newHeight, $viewBox);
         $args = ['width' => 'auto', 'height' => $newHeight];
 
         $actual = $this->SVG->normalizeSvg($file, $args);

@@ -95,6 +95,7 @@ class SVG
         }
 
         if ($this->lib === false) {
+            $this->lib = [];
             $this->loadFromDirectory($this->libDir);
             $this->libfill();
             $this->lib['_from_transient'] = false;
@@ -330,10 +331,13 @@ class SVG
      * If the key does not already exist in $this->lib, link the new key to the original
      *
      * Preserves double-underscore directory separators
-     * @return string
+     * @return string Always returns a string, either modified $key or ""
      */
     public function normalizeKey($key)
     {
+        if (!$key) {
+            return '';
+        }
         $inflector = InflectorFactory::create()->build();
 
         $newKey = preg_replace('/\.svg$/i', '', $key);
@@ -385,7 +389,7 @@ class SVG
         if ($this->hasSVG($name)) {
             // TODO: Is it possible for cleanSVG to return null?
 
-            return $this->cleanSvg($name, $args) ; //?? $this->lib[$name]->content->raw;
+            return $this->cleanSvg($name, $args); //?? $this->lib[$name]->content->raw;
         }
     }
 
@@ -629,17 +633,17 @@ class SVG
         /**
          * Only store height/width if they are 'auto' or positive integers
          */
-        if (preg_match('/^(?:auto|[0-9]+)$/i', @$params['width'])) {
+        if (array_key_exists('width', $params) && preg_match('/^(?:auto|[0-9]+)$/i', $params['width'])) {
             $this->attributes['width'] = strtolower($params['width']);
         }
 
-        if (preg_match('/^(?:auto|[0-9]+)$/i', @$params['height'])) {
+        if (array_key_exists('height', $params) && preg_match('/^(?:auto|[0-9]+)$/i', $params['height'])) {
             $this->attributes['height'] = strtolower($params['height']);
         }
 
-        $class = esc_attr(@$params['class']);
-        if ($class) {
-            $this->attributes['class'] = $class;
+        // $class = esc_attr($params['class']);
+        if (array_key_exists('class', $params)) {
+            $this->attributes['class'] = esc_attr($params['class']);
         }
     }
 

@@ -12,6 +12,8 @@ Test\Stubs::init();
  */
 final class LoadFromDirectoryTest extends TestCase
 {
+    public $SVG;
+
     public function testLoadTwoFolders()
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');

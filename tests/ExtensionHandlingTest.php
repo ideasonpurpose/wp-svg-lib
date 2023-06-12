@@ -12,6 +12,8 @@ Test\Stubs::init();
  */
 final class ExtensionHandlingTest extends TestCase
 {
+    public $SVG;
+
     protected function setUp(): void
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg/extensions');

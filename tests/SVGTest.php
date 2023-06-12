@@ -5,6 +5,9 @@ namespace IdeasOnPurpose\WP;
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
 
+use function PHPUnit\Framework\assertEmpty;
+use function PHPUnit\Framework\assertEquals;
+
 Test\Stubs::init();
 /**
 
@@ -59,7 +62,7 @@ final class SVGTest extends TestCase
         $this->assertNull($nope);
 
         /**
-         * Make sure _from_transient and _processing_time
+         * Make sure _from_transient and _processing_time [WTF was this?]
          */
         $nope = $this->SVG->embed('_from_transient');
         $this->assertNull($nope);
@@ -67,23 +70,24 @@ final class SVGTest extends TestCase
         $nope = $this->SVG->embed('_processing_time');
         $this->assertNull($nope);
 
-        $actual = $this->getActualOutput();
+        $actual = ob_get_contents();
+
         $this->assertStringContainsString('<!-- SVG Lib Error', $actual);
         $this->expectOutputRegex('/<!-- SVG Lib Error/');
     }
 
     public function testUse()
     {
+        $this->expectOutputRegex('/<!-- SVG Lib Error/');
         $arrow_svg = $this->SVG->use('arrow.svg');
         $nope = $this->SVG->use('not-a-file');
         $inUse = $this->SVG->inUse;
-        $actual = $this->getActualOutput();
+        $actual = ob_get_contents();
 
         $this->assertStringContainsString('<!-- SVG Lib Error', $actual);
         $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow_svg);
         $this->assertNull($nope);
         $this->assertCount(1, $inUse);
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
     }
 
     /**
@@ -100,12 +104,13 @@ final class SVGTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['use'])
             ->getMock();
+
+        $this->expectOutputRegex('/get method is deprecated/');
         $svg->method('use')->willReturn($expected);
 
         /** @var \IdeasOnPurpose\WP\SVG $svg */
         $actual = $svg->get('arrow');
         $this->assertEquals($expected, $actual);
-        $this->expectOutputRegex('/get method is deprecated/');
     }
 
     /**
@@ -118,12 +123,13 @@ final class SVGTest extends TestCase
 
         $is_user_logged_in = true;
         $this->SVG->WP_DEBUG = false;
+
+        $this->expectOutputRegex('/<!-- NO SVGs IN USE/');
         $this->SVG->dumpSymbols();
 
-        $actual = $this->getActualOutput();
+        $actual = ob_get_contents();
 
         $this->assertStringNotContainsString('<!-- SVG::dumpSymbols call stack', $actual);
-        $this->expectOutputRegex('/<!-- NO SVGs IN USE/');
     }
 
     /**
@@ -136,12 +142,13 @@ final class SVGTest extends TestCase
 
         $is_user_logged_in = true;
         $this->SVG->WP_DEBUG = true;
+
+        $this->expectOutputRegex('/<!-- NO SVGs IN USE/');
         $this->SVG->dumpSymbols();
 
-        $actual = $this->getActualOutput();
+        $actual = ob_get_contents();
 
         $this->assertStringContainsString('<!-- SVG::dumpSymbols call stack', $actual);
-        $this->expectOutputRegex('/<!-- NO SVGs IN USE/');
     }
 
     /**
@@ -150,24 +157,25 @@ final class SVGTest extends TestCase
      */
     public function test_dumpSymbolsUseSVGs()
     {
+        $this->expectOutputRegex('/<symbol.*viewBox/');
         $this->SVG->use('arrow');
         $this->SVG->dumpSymbols();
 
-        $dump = $this->getActualOutput();
-        $this->assertStringContainsString('display: none', $dump);
-        $this->assertStringContainsString('<svg ', $dump);
-        $this->expectOutputRegex('/<symbol.*viewBox/');
+        $actual = ob_get_contents();
+        $this->assertStringContainsString('display: none', $actual);
+        $this->assertStringContainsString('<svg ', $actual);
     }
 
     public function testDebug()
     {
+        $this->expectOutputRegex('/<div/');
         $lib = $this->SVG->debug();
         $this->assertGreaterThan(0, $lib);
 
-        $actual = $this->getActualOutput();
+        $actual = ob_get_contents();
+
         $this->assertStringContainsString('<style>', $actual);
         $this->assertStringContainsString('</div>', $actual);
-        $this->expectOutputRegex('/<div/');
     }
 
     public function testDebugEmptyLib()
@@ -184,7 +192,8 @@ final class SVGTest extends TestCase
          * SVG::debug should not dump CSS rules and the debug container
          * when there is nothing registered in $VG->lib
          */
-        $actual = $this->getActualOutput();
+        $actual = ob_get_contents();
+
         $this->assertStringNotContainsString('<style>', $actual);
         $this->assertStringNotContainsString('</div>', $actual);
     }
@@ -193,7 +202,8 @@ final class SVGTest extends TestCase
     {
         $this->SVG->directory();
         $this->expectOutputRegex('/directory method is deprecated/');
-        $actual = $this->getActualOutput();
+        $actual = ob_get_contents();
+
         $this->assertStringContainsString('<style>', $actual);
         $this->assertStringContainsString('</div>', $actual);
     }
@@ -212,12 +222,11 @@ final class SVGTest extends TestCase
         require 'fixtures/StaticSVG.php';
 
         $static = new StaticSVG(__DIR__ . '/fixtures/svg');
+        $this->expectOutputRegex('/Loading SVGs from static child classes is deprecated/');
         $static->init();
 
         $svg = $static->arrowStatic;
         $this->assertStringContainsString('<svg', $svg);
-
-        $this->expectOutputRegex('/Loading SVGs from static child classes is deprecated/');
     }
 
     /**
@@ -243,15 +252,20 @@ final class SVGTest extends TestCase
 
     public function testCleanSvg()
     {
+        $this->expectOutputRegex('/<!-- SVG Lib Error/');
         $actual = $this->SVG->cleanSvg('nope');
         $this->assertNull($actual);
-        $this->getActualOutput();
+        // $this->getActualOutput();
+        $expected = ob_get_contents();
 
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
+        d('TEST', $expected);
 
         $args = ['width' => 123];
         $this->SVG->cleanSvg('arrow', $args);
-        $this->assertObjectHasAttribute('clean_json', $this->SVG->lib['arrow']->_links);
+
+        $this->assertIsObject($this->SVG->lib['arrow']->_links);
+        $this->assertTrue(property_exists($this->SVG->lib['arrow']->_links, 'clean_json'));
+        d($this->SVG->lib['arrow']);
     }
 
     public function testCleanSvg_error()
@@ -261,6 +275,7 @@ final class SVGTest extends TestCase
             'content' => (object) ['raw' => '<svg><g>'],
         ];
         $this->SVG->cleanSvg('bad');
-        $this->assertObjectHasAttribute('errors', $this->SVG->lib['bad']);
+        $this->assertIsObject($this->SVG->lib['arrow']->_links);
+        $this->assertTrue(property_exists($this->SVG->lib['bad'], 'errors'));
     }
 }
