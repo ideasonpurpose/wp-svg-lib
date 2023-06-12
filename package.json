@@ -34,7 +34,7 @@
     ]
   },
   "devDependencies": {
-    "@prettier/plugin-php": "^0.19.5",
+    "@prettier/plugin-php": "^0.19.6",
     "auto-changelog": "^2.4.0",
     "prettier": "^2.8.8",
     "version-everything": "^0.9.3"
