@@ -27,7 +27,7 @@ new IdeasOnPurpose\WP\SVG;
 new IdeasOnPurpose\WP\SVG(get_theme_directory() . '/icons/svg');
 ```
 
-Every SVG file in that directory or its children will be registered and available to template files. The library will inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.
+All SVG files below the directory  will be registered and available to template files. The library will inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.
 
 Install from [Packagist](https://packagist.org/packages/ideasonpurpose/wp-svg-lib), require it in **composer.json** or tell Composer to load the package:
 
@@ -49,14 +49,14 @@ That code outputs something like this:
 <div><svg viewBox="0 0 25 10">...</svg></div>
 ```
 
-The library will normalize all file names to camelCase to help with embedding. Directory separators will be replaced with double-underscores. Some examples:
+The library  normalizes all file names to *camelCase* to help with embedding. Directory separators will be replaced with double-underscores. Some examples:
 
 ```php
 // the file 'icons/email-circle.svg' can be embedded as:
 $SVG->icons__emailCircle;
 ```
 
-For SVG files whose names aren't compatible with PHP's property syntax or are nested subfolders, there's also an embed command:
+For SVG files whose names aren't compatible with PHP's property syntax, there's also an embed command which also works with nested directories:
 
 ```php
 <li><?= $SVG->embed('arrow-left') ?></li>
@@ -70,12 +70,15 @@ For convenience, SVG files can be embedded with or without their file extension.
 <li><?= $SVG->embed('icons/email.svg') ?></li>
 ```
 
+Note that name resolution is bi-directional. An SVG file named **dash-case.svg** can be embedded by either `dash-case` or `dashCase`. Likewise, a file named **camelCase.svg** will be accessible by either `camelCase` or `camel-case`.
+
+
 ### Inlining SVG Symbols
 
 SVGs can also be injected as linked symbols, where most all of the markup only appears once. This can be useful for simple elements which appear repeatedly:
 
 ```php
-<a href="#"><?= $SVG->get('arrow') ?>Go!</a>
+<a href="#"><?= $SVG->use('arrow') ?>Go!</a>
 ```
 
 The library keeps a record of which files have been included like this, then injects a symbol reference from the `wp_footer` hook. Together, the above code and symbol library look like this:
@@ -140,11 +143,8 @@ All attributes except `viewBox` and `xmlns` are removed from`clean` valid SVG fi
 
 Invalid SVGs pass through to `raw` without modification. Error details will be added to the JSON data object.
 
-Other than the opening `<svg>` tag, vector data is not optimized in any way. Please use something like [svgo][] or [our buildchain][docker-build] to optimize SVG files.
+Other than the opening `<svg>` tag, vector data is not optimized in any way. Please use something like [svgo][] to optimize SVG files.
 
-## Notes
-
-- Name resolution is bi-directional. An SVG file named **dash-case.svg** can be embedded by either `dash-case` or `dashCase`. Likewise, a file named **camelCase.svg** will be accessible by either `camelCase` or `camel-case`.
 
 ## Shortcodes
 
