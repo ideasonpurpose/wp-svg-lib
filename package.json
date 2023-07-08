@@ -1,6 +1,6 @@
 {
   "name": "wp-svg-lib",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "description": "Utilities for collecting and reusing inline SVG components",
   "license": "MIT",

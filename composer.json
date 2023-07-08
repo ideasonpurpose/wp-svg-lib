@@ -30,7 +30,6 @@
       "/tests",
       "CHANGELOG.md",
       "docker-compose.yml",
-      "Dockerfile",
       "package*",
       "phpunit.xml"
     ]

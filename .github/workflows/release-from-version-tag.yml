@@ -2,13 +2,12 @@ name: Create Release from Version Tags
 
 on:
   push:
-    branches: "*"
     tags: ["v*"]
 
 jobs:
   build:
     runs-on: ubuntu-20.04
-    name: Build, bundle and deploy to AWS
+    name: Build Release
 
     steps:
       - uses: actions/checkout@v2
