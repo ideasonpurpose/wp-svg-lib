@@ -23,24 +23,28 @@ use Doctrine\Inflector\InflectorFactory;
 class SVG
 {
     public $lib = [];
+
     /**
-     * Convert WP_DEBUG constant to a property for use in tests
-     * @var bool
+     * A placeholder for WP_DEBUG which can be mocked
      */
-    public $WP_DEBUG;
+    public $is_debug = false;
+    /**
+     * A placeholder for the ABSPATH constant which can be mocked
+     */
+    public $abspath;
 
     public $libDir;
     public $transient;
     public $rest_namespace;
     public $rest_route;
     public $rest_base;
-    public $attributes;
     public $inUse;
     public $shortcode;
 
     public function __construct($libDir = null)
     {
-        $this->WP_DEBUG = defined('WP_DEBUG') && WP_DEBUG;
+        $this->is_debug = defined('WP_DEBUG') && WP_DEBUG;
+        $this->abspath = defined('ABSPATH') ? ABSPATH : false;
 
         $this->libDir = $libDir ?? get_template_directory() . '/dist/images/svg';
 
@@ -51,7 +55,6 @@ class SVG
         $this->rest_route = 'svg';
         $this->rest_base = "{$this->rest_namespace}/{$this->rest_route}";
 
-        $this->attributes = [];
         $this->inUse = [];
 
         $this->shortcode = 'svg';
@@ -90,7 +93,7 @@ class SVG
         /**
          * Disable transients when WP_DEBUG is true
          */
-        if ($this->WP_DEBUG === true) {
+        if ($this->is_debug === true) {
             $this->lib = false;
         }
 
@@ -136,101 +139,118 @@ class SVG
 
                 $key = $this->normalizeKey($key);
                 $restSelf = get_rest_url(null, "{$this->rest_base}/{$key}");
-                $this->lib[$key] = (object) [
-                    'content' => (object) ['raw' => trim(file_get_contents($file->getRealPath()))],
-                    // TODO: maybe use get_theme_root instead of get_template_directory?
-                    // @link  https://developer.wordpress.org/reference/functions/get_theme_root/
-                    // @link  https://developer.wordpress.org/reference/functions/get_template_directory/
-                    'src' => str_replace(get_template_directory() . '/', '', $file->getRealPath()),
-                    '_links' => (object) [
-                        'self' => $restSelf,
-                        'collection' => get_rest_url(null, "{$this->rest_base}"),
-                        'raw' => add_query_arg(['raw' => ''], $restSelf . '.svg'),
-                    ],
+
+                $svg = $this->normalizeSvg(file_get_contents($file->getRealPath()));
+
+                $rootRelPath = str_replace($this->abspath, '', $file->getRealPath());
+                $srcUrl = site_url($rootRelPath);
+
+                /**
+                 * NOTE: Keys prefixed with double-underscores are private and will be scrubbed
+                 * from non-debug output
+                 */
+                $svg->__srcPath = $file->getRealPath();
+                $svg->_links = (object) [
+                    'self' => $restSelf, // url pointing to a JSON representation including any query vars
+                    'collection' => get_rest_url(null, "{$this->rest_base}"), // Collection of all SVGs, query vars ignored
+                    'svg' => $restSelf . '.svg',
+                    'src' => $srcUrl, // direct url to the source file
                 ];
-                $this->cleanSvg($key);
+
+                $this->lib[$key] = $svg;
             }
         }
         ksort($this->lib);
     }
 
     /**
-     * TODO: Needs a better name, this is sort of a wrapper/processor for normalizeSvg
+     * This re-constructs and re-wraps a normalized SVG object and modifies attributes
+     * based on the provided args. This can be used to inject width/height attributes, classes or an ID.
      *
-     * The main reason for this is so we can re-normalize SVGs with new sizes on demand.
-     * This uses names of existing SVG files, normalizeSvg takes a string of SVG content
-     *
-     * Properties of the Object returned by NormalizeSvg are added to the content in lib
-     *
-     * @return String As a convenience, return the normalized "clean" SVG content if available
-     *                Otherwise an empty string
-     *
+     * $args are generally passed from getAttributesFromRestParams(), where they've already been
+     * validated.
      */
-    public function cleanSvg($name, $args = [])
+    public function rewrapSvg($svg, $attributes = [])
     {
-        if (!$this->hasSVG($name)) {
-            return;
+        $esc_atts = array_map('urlencode', $attributes);
+        $svg->_links->self = add_query_arg($esc_atts, $svg->_links->self);
+        $svg->_links->svg = add_query_arg($esc_atts, $svg->_links->svg);
+
+        $aspect = $svg->aspect;
+        $width = $svg->width;
+        $height = $svg->height;
+        $viewBox = explode(' ', $svg->attributes['viewBox']);
+
+        $newWidth = array_key_exists('width', $attributes) ? $attributes['width'] : null;
+        $newHeight = array_key_exists('height', $attributes) ? $attributes['height'] : null;
+
+        if (count($viewBox) == 4) {
+            $width = $width ?: intval($viewBox[2]);
+            $height = $height ?: intval($viewBox[3]);
         }
 
-        $svg = $this->lib[$name];
-        $cleanSvg = $this->normalizeSvg($this->lib[$name]->content->raw, $args);
+        if ($newWidth == 'auto' && $newHeight == 'auto') {
+            $newWidth = $width;
+            $newHeight = $height;
+        }
 
-        if (property_exists($cleanSvg, 'content')) {
-            $svg->content->clean = $cleanSvg->content;
-            $esc_args = array_map('urlencode', $args);
-
-            $svg->_links->clean = add_query_arg($esc_args, get_rest_url(null, "{$this->rest_base}/{$name}.svg"));
-            if (!empty($esc_args)) {
-                // TODO: What is this? Why only add clean_json if args are not empty
-                $svg->_links->clean_json = add_query_arg($esc_args, $svg->_links->self);
+        if ($newWidth) {
+            if ($newWidth == 'auto') {
+                $h = $newHeight ?: $height;
+                $newWidth = round($h * $aspect);
             }
+            $width = $newWidth;
+            $attributes['width'] = $newWidth;
         }
 
-        if (property_exists($cleanSvg, 'width')) {
-            $svg->width = $cleanSvg->width;
+        if ($newHeight) {
+            if ($newHeight == 'auto') {
+                $w = $newWidth ?: $width;
+                $newHeight = round($w / $aspect);
+            }
+            $height = $newHeight;
+            $attributes['height'] = $newHeight;
         }
 
-        if (property_exists($cleanSvg, 'height')) {
-            $svg->height = $cleanSvg->height;
+        /**
+         * Restore viewBox width/height
+         */
+        if (count($viewBox) != 4 && $width && $height) {
+            $viewBox = [0, 0, $width, $height];
         }
 
-        if (property_exists($cleanSvg, 'aspect')) {
-            $svg->aspect = $cleanSvg->aspect;
+        if (count($viewBox) === 4) {
+            $attributes['viewBox'] = implode(' ', $viewBox);
         }
 
-        if (property_exists($cleanSvg, 'error')) {
-            $msg = "Error processing {$svg->src}";
-            error_log($msg);
-            $svg->errors = ['error' => $msg, 'libxml' => $cleanSvg->error];
-        }
-        return $cleanSvg->content ?? '';
+        $svg->old_attributes = $svg->attributes;
+        $svg->attributes = $attributes;
+        $svg->svg = $this->wrapSvg($svg->innerContent, $attributes);
+
+        return $svg;
     }
 
     /**
-     *
-     * Returns an object containing the following:
-     */
-
-    /**
-     * normalizeSvg
+     * Validates and normalizes SVGs. Returns an object
      *
      * @param  string $rawSVGString - A blob of SVG content
-     * @return object {'height' => Integer, 'width' => Integer, 'aspect' => Float, 'content' => String}
+     * @return object {
+     * TODO: UPDATE THIS
+     *              'svg' => String,
+     *              'innerContent' => String,
+     *              'width' => 'Integer',
+     *              'height' => Integer,
+     *              'aspect' => Float,
+     *              'attributes' => Object
+     *              }
      */
     public function normalizeSvg($rawSVGString, $args = [])
     {
-        $clean = null;
-        $aspect = 1;
-        $width = null;
-        $height = null;
-        $viewBox = [];
-
-        $newWidth = array_key_exists('width', $args) ? $args['width'] : null;
-        $newHeight = array_key_exists('height', $args) ? $args['height'] : null;
-        $newClass = array_key_exists('class', $args) ? $args['class'] : '';
+        // $svg = null;
+        // $aspect = 1;
 
         libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($rawSVGString);
+        $xml = simplexml_load_string(trim($rawSVGString));
 
         /**
          * If we can't parse the SVG, bail early
@@ -243,54 +263,27 @@ class SVG
          * NOTE: SimpleXMLElements attributes method returns objects, these
          * need to be coerced to strings, otherwise the variable assignment
          * breaks when the attributes are unset
-         * @var $attributes is a store for removal after iterating
          */
-        $atts = [];
-        foreach ($xml->attributes() as $key => $value) {
-            $atts[] = $key;
-            $width = strtolower($key) === 'width' ? (string) $value : $width;
-            $height = strtolower($key) === 'height' ? (string) $value : $height;
-            $viewBox = strtolower($key) === 'viewbox' ? explode(' ', $value) : $viewBox;
-        }
-        /**
-         * Remove all attributes from xml root. Do this in a separate loop
-         * to keep from mutating the active iterator. (which doesn't work anyway)
-         */
-        foreach ($atts as $att) {
-            unset($xml->attributes()->$att);
+        $xml_attributes = [];
+        foreach ($xml->attributes() as $k => $v) {
+            $xml_attributes[strtolower((string) $k)] = (string) $v;
         }
 
+        $width = array_key_exists('width', $xml_attributes) ? $xml_attributes['width'] : null;
+        $height = array_key_exists('height', $xml_attributes) ? $xml_attributes['height'] : null;
+        $viewBox = array_key_exists('viewbox', $xml_attributes) ? explode(' ', $xml_attributes['viewbox']) : [];
+
+        $attributes = [];
+
+        /**
+         * Remember ViewBox is min-x, min-y, WIDTH and HEIGHT, the first two numbers are NOT x,y dimensions
+         */
         if (count($viewBox) == 4) {
             $width = $width ?: $viewBox[2];
             $height = $height ?: $viewBox[3];
         }
 
-        if ($width && $height) {
-            $aspect = $width / $height;
-        }
-
-        if ($newWidth == 'auto' && $newHeight == 'auto') {
-            $newWidth = $width;
-            $newHeight = $height;
-        }
-
-        if ($newWidth) {
-            if (strtolower($newWidth) == 'auto') {
-                $h = $newHeight ?: $height;
-                $newWidth = round($h * $aspect);
-            }
-            $width = $newWidth;
-            $xml->addAttribute('width', $newWidth);
-        }
-
-        if ($newHeight) {
-            if (strtolower($newHeight) == 'auto') {
-                $w = $newWidth ?: $width;
-                $newHeight = round($w / $aspect);
-            }
-            $height = $newHeight;
-            $xml->addAttribute('height', $newHeight);
-        }
+        $aspect = $width && $height ? $width / $height : 1;
 
         /**
          * Restore viewBox width/height
@@ -300,26 +293,53 @@ class SVG
         }
 
         if (count($viewBox) === 4) {
-            $xml->addAttribute('viewBox', implode(' ', $viewBox));
+            $attributes['viewBox'] = implode(' ', $viewBox);
         }
 
-        if ($newClass) {
-            $xml->addAttribute('class', $newClass);
-        }
+        $attributes = array_filter($attributes, 'strlen');
 
         /**
-         * Remove the XML Declaration
+         * Remove the XML Declaration then strip <svg> container
          */
-        $clean = preg_replace('/^<\?xml[^<]+/mi', '', $xml->asXML());
+        $svg = preg_replace('/^<\?xml[^<]+/mi', '', $xml->asXML());
+        $contents = preg_replace('%</?svg[^>]*>\s*%', '', $svg);
 
-        $output = (object) [
-            'height' => intval($height),
+        $output = [
+            'svg' => $this->wrapSvg($contents, $attributes),
+            'innerContent' => $contents,
             'width' => intval($width),
+            'height' => intval($height),
             'aspect' => $aspect,
-            'content' => trim($clean),
+            'attributes' => $attributes,
         ];
 
-        return $output;
+        return (object) $output;
+    }
+
+    /**
+     *
+     * TODO: This could roll up into rewrapSvg, just pass a simple opening tag if there are no args?
+     *
+     * Wraps $contents with an SVG container. The opening tag is constructed from a restricted
+     * list of key=>value $attributes. Attribute order is enforced:
+     *     id, class, width, height, viewBox, xmlns
+     * CamelCasing of viewBox is NOT enforced, if case doesn't match, it will be omitted.
+     * @param string $contents
+     * @param array $attributes
+     * @return string
+     */
+    public function wrapSvg($contents, $attributes)
+    {
+        $atts = array_fill_keys(['id', 'class', 'width', 'height', 'viewBox'], '');
+        $atts = array_replace($atts, array_intersect_key($attributes, $atts));
+        $atts = array_filter($atts, 'strlen');
+
+        $tag = '<svg';
+        foreach ($atts as $label => $value) {
+            $tag = sprintf('%s %s="%s"', $tag, $label, $value);
+        }
+        $tag .= ' xmlns="http://www.w3.org/2000/svg">';
+        return $tag . $contents . '</svg>';
     }
 
     /**
@@ -355,8 +375,8 @@ class SVG
     {
         $key = $this->normalizeKey($name);
 
-        if (!array_key_exists($key, $this->lib) || !property_exists($this->lib[$key], 'content')) {
-            if ($this->WP_DEBUG) {
+        if (!array_key_exists($key, $this->lib) || !property_exists($this->lib[$key], 'svg')) {
+            if ($this->is_debug) {
                 $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
                 error_log($error);
                 echo "\n<!-- $error -->\n\n";
@@ -389,7 +409,7 @@ class SVG
         if ($this->hasSVG($name)) {
             // TODO: Is it possible for cleanSVG to return null?
 
-            return $this->cleanSvg($name, $args); //?? $this->lib[$name]->content->raw;
+            return $this->rewrapSvg($name, $args); //?? $this->lib[$name]->content->raw;
         }
     }
 
@@ -514,15 +534,19 @@ class SVG
         // Only sort if static vars have been added
         if ($has_static_vars) {
             ksort($this->lib);
-            echo "\n\n<!-- Loading SVGs from static child classes is deprecated. Load from a directory instead. --> ";
+            echo "\n\n<!-- Loading SVGs from static child classes is deprecated. Load from a directory instead. -->\n";
         }
     }
 
     /**
      * Prints an SVG containing all the symbols referenced in the document.
+     *
+     * @deprecated
      */
     public function dumpSymbols()
     {
+        echo "\n\n<!-- SVG:dumpSymbols is deprecated. View the full list of SVGs from the Rest API. -->\n";
+
         if (count($this->inUse)) {
             $this->inUse = array_unique($this->inUse);
             sort($this->inUse);
@@ -530,7 +554,7 @@ class SVG
                 return preg_replace(
                     ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
                     ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
-                    $this->lib[$key]->content->raw
+                    $this->lib[$key]->svg
                 );
             }, $this->inUse);
             $symbols = implode("\n", $symbols);
@@ -539,7 +563,7 @@ class SVG
             if (is_user_logged_in()) {
                 echo "<!-- NO SVGs IN USE -->\n";
 
-                if ($this->WP_DEBUG) {
+                if ($this->is_debug) {
                     $trace = array_map(fn($i) => $i['file'] . ':' . $i['line'], debug_backtrace());
                     $trace = implode("\n\t", $trace);
                     printf("<!-- SVG::dumpSymbols call stack:\n\t%s\n -->\n", $trace);
@@ -555,19 +579,21 @@ class SVG
      */
     public function registerRestRoutes()
     {
-        register_rest_route('ideasonpurpose/v1', '/svg/(?P<name>[^/]*)\.svg', [
+        // d($this->rest_base);
+
+        register_rest_route($this->rest_namespace, "/{$this->rest_route}/(?P<name>[^/]*)\.svg", [
             'methods' => \WP_REST_Server::READABLE,
             'callback' => [$this, 'returnSvgFile'],
             'permission_callback' => '__return_true',
         ]);
 
-        register_rest_route('ideasonpurpose/v1', '/svg/(?P<name>[^/]*)', [
+        register_rest_route($this->rest_namespace, "/{$this->rest_route}/(?P<name>[^/]*)", [
             'methods' => \WP_REST_Server::READABLE,
             'callback' => [$this, 'restResponse'],
             'permission_callback' => '__return_true',
         ]);
 
-        register_rest_route('ideasonpurpose/v1', '/svg', [
+        register_rest_route($this->rest_namespace, "/{$this->rest_route}", [
             'methods' => \WP_REST_Server::READABLE,
             'callback' => [$this, 'restResponse'],
             'permission_callback' => '__return_true',
@@ -576,75 +602,86 @@ class SVG
 
     public function returnSvgFile(\WP_REST_Request $req)
     {
-        $this->getAttributesFromRestParams($req);
-
-        /**
-         * Acceptable false values for 'raw' are ['0', 'no', 'false']
-         */
-        $raw = $req->get_param('raw');
-        $is_raw = !is_null($raw) && !in_array(strtolower($raw), ['0', 'no', 'false']);
-
         $name = $req->get_param('name');
         if ($this->hasSVG($name)) {
-            // NOTE: Disable this to debug SVG contents in the browser
-            header('Content-type: image/svg+xml');
+            $atts = $this->getAttributesFromRestParams($req);
+            $svg = $this->lib[$name];
+            $svg = $this->rewrapSvg($svg, $atts);
 
-            $this->cleanSvg($name);
-            if ($is_raw && $this->lib[$name]->content->clean) {
-                $svg = $this->lib[$name]->content->raw;
-            } else {
-                $svg = $this->lib[$name]->content->clean;
-            }
-
-            return $this->exit($svg);
+            // NOTE: Disable header to debug SVG contents in the browser
+            // header('Content-type: image/svg+xml');
+            return $this->exit($svg->svg);
         }
+    }
+
+    /**
+     * Check for $this->is_debug and remove private underscore-prefixed keys when false
+     * @param object $res
+     * @return object
+     */
+    public function removePrivateKeys($res)
+    {
+        // $this->is_debug = false; // debug toggle
+        if (!is_iterable($res) || $this->is_debug) {
+            return $res;
+        }
+        $clean = (object) [];
+
+        foreach ($res as $key => $value) {
+            if (substr($key, 0, 2) == '__') {
+                continue;
+            }
+            $clean->$key = $value;
+        }
+
+        return $clean;
     }
 
     public function restResponse(\WP_REST_Request $req)
     {
-        $this->getAttributesFromRestParams($req);
-
         $name = $this->normalizeKey($req->get_param('name'));
 
         if ($name && $this->hasSVG($name)) {
-            $this->cleanSvg($name);
-            return rest_ensure_response($this->lib[$name]);
+            /**
+             * Only apply attributes to requests for a single SVG
+             */
+            $atts = $this->getAttributesFromRestParams($req);
+            $svg = $this->lib[$name];
+            $svg = $this->removePrivateKeys($svg);
+            $svg->name = $name;
+            $svg = $this->rewrapSvg($svg, $atts);
+            return rest_ensure_response($svg);
         }
 
-        foreach (array_keys($this->lib) as $name) {
-            /**
-             * Skip keys starting with underscores (debug info)
-             */
-            if (substr($name, 0, 1) == '_') {
-                continue;
-            }
-            $this->cleanSvg($name);
+        $lib = (object) [];
+        foreach ($this->lib as $name => $svg) {
+            $lib->$name = $this->removePrivateKeys($svg);
         }
-        return rest_ensure_response($this->lib);
+        return rest_ensure_response($lib);
     }
 
     /**
      * Extract and validate known attributes from REST Request Params
+     * Supported parameters: id, class, width, height
      */
     public function getAttributesFromRestParams(\WP_REST_Request $req)
     {
-        $params = $req->get_params();
+        $atts = [];
+        $atts['id'] = (string) $req->get_param('id');
+        $atts['class'] = (string) $req->get_param('class');
 
         /**
          * Only store height/width if they are 'auto' or positive integers
          */
-        if (array_key_exists('width', $params) && preg_match('/^(?:auto|[0-9]+)$/i', $params['width'])) {
-            $this->attributes['width'] = strtolower($params['width']);
-        }
+        $pattern = '/^(?:auto|[0-9]+)$/i';
+        $width = (string) $req->get_param('width');
+        $height = (string) $req->get_param('height');
+        $width = preg_match($pattern, $width) ? strtolower($width) : '';
+        $height = preg_match($pattern, $height) ? strtolower($height) : '';
+        $atts['width'] = $width === 'auto' ? $width : intval($width);
+        $atts['height'] = $height === 'auto' ? $height : intval($height);
 
-        if (array_key_exists('height', $params) && preg_match('/^(?:auto|[0-9]+)$/i', $params['height'])) {
-            $this->attributes['height'] = strtolower($params['height']);
-        }
-
-        // $class = esc_attr($params['class']);
-        if (array_key_exists('class', $params)) {
-            $this->attributes['class'] = esc_attr($params['class']);
-        }
+        return array_filter($atts, 'strlen');
     }
 
     /**
