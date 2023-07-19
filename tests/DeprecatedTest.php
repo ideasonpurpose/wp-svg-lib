@@ -11,6 +11,9 @@ Test\Stubs::init();
 
 /**
  * @covers \IdeasOnPurpose\WP\SVG
+ * @covers \IdeasOnPurpose\WP\Deprecated\Directory
+ * @covers \IdeasOnPurpose\WP\Deprecated\DumpSymbols
+ * @covers \IdeasOnPurpose\WP\Deprecated\Get
  */
 final class DeprecatedTest extends TestCase
 {
@@ -32,7 +35,7 @@ final class DeprecatedTest extends TestCase
         $this->assertStringContainsString('</div>', $actual);
     }
 
-        /**
+    /**
      * Test dumpSymbols with no SVGs in use
      * Logged in message only, no debug output
      */
@@ -84,6 +87,4 @@ final class DeprecatedTest extends TestCase
         $this->assertStringContainsString('display: none', $actual);
         $this->assertStringContainsString('<svg ', $actual);
     }
-
-
 }

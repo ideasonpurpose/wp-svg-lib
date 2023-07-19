@@ -5,8 +5,6 @@ namespace IdeasOnPurpose\WP;
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
 
-// use function PHPUnit\Framework\assertEmpty;
-// use function PHPUnit\Framework\assertEquals;
 
 Test\Stubs::init();
 /**
@@ -77,6 +75,39 @@ final class SVGTest extends TestCase
         // $this->expectOutputRegex('/<!-- SVG Lib Error/');
     }
 
+    public function testEmbedError()
+    {
+        $svg = $this->getMockBuilder(\IdeasOnPurpose\WP\SVG::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['fetch'])
+            ->getMock();
+
+        $svg->is_debug = true;
+        $err_message = "PHPUnit Error";
+        $err = new \WP_ERROR(123, $err_message);
+        $svg->method('fetch')->willReturn($err);
+
+        $actual = $svg->embed('mocked');
+        $this->assertStringContainsString($err_message, $actual);
+        $this->assertStringContainsString('<svg', $actual);
+    }
+
+    /**
+     * Coverage until we pick a final name: getSVG() vs fetch()
+     */
+    public function testGetSvg()
+    {
+        $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
+            ->disableOriginalConstructor()
+            ->onlyMethods(['fetch'])
+            ->getMock();
+
+        $svg->expects($this->once())->method('fetch');
+
+        /** @var \IdeasOnPurpose\WP\SVG $svg */
+        $svg->getSVG('arrow');
+    }
+
     // public function testUse()
     // {
     //     $this->expectOutputRegex('/<!-- SVG Lib Error/');
@@ -113,7 +144,6 @@ final class SVGTest extends TestCase
         $actual = $svg->get('arrow');
         $this->assertEquals($expected, $actual);
     }
-
 
     public function testDebug()
     {

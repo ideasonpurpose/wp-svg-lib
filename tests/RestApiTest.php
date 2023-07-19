@@ -48,6 +48,14 @@ final class RestApiTest extends TestCase
         $this->assertObjectHasProperty('svg', $actual->_links);
     }
 
+    public function testReturnsCollection()
+    {
+        $req = new WP_REST_Request([]);
+        $actual = $this->SVG->restResponse($req);
+        $this->assertIsObject($actual);
+        $this->assertObjectHasProperty('arrow', $actual);
+    }
+
     public function testSelfHasQuery()
     {
         $req = new WP_REST_Request(['name' => 'arrow', 'width' => 123]);
@@ -92,37 +100,28 @@ final class RestApiTest extends TestCase
      * @runInSeparateProcess
      * Run in separate process to suppress "headers already sent" error
      */
-    // public function testReturnSvgFile(): void
-    // {
-    //     $mockSvg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
-    //         ->onlyMethods(['exit'])
-    //         ->getMock();
+    public function testReturnSvgFile(): void
+    {
+        $mockSvg = $this->getMockBuilder(\IdeasOnPurpose\WP\SVG::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['exit'])
+            ->getMock();
 
-    //     $mockSvg->method('exit')->willReturnArgument(0);
+        $mockSvg
+            ->expects($this->once())
+            ->method('exit')
+            ->willReturnArgument(0);
 
-    //     /** @var \IdeasOnPurpose\WP\SVG $mockSvg */
-    //     $mockSvg->is_debug = false;
-    //     $mockSvg->libDir = __DIR__ . '/fixtures/svg';
-    //     $mockSvg->init();
+        $req = new WP_REST_Request(['name' => 'arrow']);
+        $mockSvg->returnSvgFile($req);
 
-    //     $req = new WP_REST_Request(['name' => 'arrow']);
-    //     /** @var String $actual */
-    //     $actual = $mockSvg->returnSvgFile($req);
-    //     $this->assertStringContainsString('<svg', $actual);
-    //     $this->assertStringContainsString('xmlns', $actual);
-
-    //     // $req = new WP_REST_Request(['name' => 'arrow', 'raw' => true]);
-    //     // /** @var String $actual */
-    //     // $actual = $mockSvg->returnSvgFile($req);
-    //     // $this->assertStringContainsString('<svg', $actual);
-    //     // $this->assertStringContainsString('width=', $actual);
-
-    //     /**
-    //      * @link https://stackoverflow.com/a/39892373/503463
-    //      */
-    //     $actual = xdebug_get_headers();
-    //     $this->assertStringContainsString('image/svg+xml', $actual[0]);
-    // }
+        /**
+         * xdebug_get_headers
+         * @link https://stackoverflow.com/a/39892373/503463
+         */
+        $headers = xdebug_get_headers();
+        $this->assertStringContainsString('image/svg+xml', $headers[0]);
+    }
 
     public function testRestResponse(): void
     {

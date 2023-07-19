@@ -25,7 +25,8 @@ class SVG
     use Deprecated\Directory;
     use Deprecated\Get;
     use Deprecated\DumpSymbols;
-    use Deprecated\LibFill;
+    // use Deprecated\LibFill;
+
     public $lib = [];
 
     /**
@@ -394,7 +395,7 @@ class SVG
     }
 
     /**
-     * TODO: Alternate name, getSVG() ??
+     * TODO: Alternate name, getSVG(). Pi
      * @param string $key
      * @param array $attributes
      * @return object | WP_Error
@@ -420,6 +421,7 @@ class SVG
 
     /**
      * Alias for $this->fetch()
+     * TODO: Pick a name
      * @param mixed $key
      * @param mixed $attributes
      * @return void
@@ -576,17 +578,18 @@ class SVG
     {
         $name = $this->normalizeKey($req->get_param('name'));
 
-        // d($req, $name);
+        if (!$name) {
+            $lib = (object) [];
+            foreach ($this->lib as $name => $svg) {
+                $lib->$name = $this->removePrivateKeys($svg);
+            }
+            return rest_ensure_response($lib);
+        }
+
         $svg = $this->fetch($name, $req->get_params());
         if ($svg) {
             return $svg;
         }
-
-        $lib = (object) [];
-        foreach ($this->lib as $name => $svg) {
-            $lib->$name = $this->removePrivateKeys($svg);
-        }
-        return rest_ensure_response($lib);
     }
 
     /**

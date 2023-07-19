@@ -129,7 +129,6 @@ final class NormalizeSvgTest extends TestCase
     {
         $args = ['width' => 'auto', 'height' => 'auto'];
 
-        // $file = '<svg viewBox="10 10 100 50"></svg>';
         $svg = $this->lib[0];
         $svg->width = 100;
         $svg->height = 50;
@@ -143,23 +142,6 @@ final class NormalizeSvgTest extends TestCase
 
         $this->assertStringContainsString('viewBox', $actual->svg);
     }
-
-    // TODO: Move to rewrap
-    // public function testDimensionsAreIntegers()
-    // {
-    //     $width = 40;
-    //     $height = 25;
-    //     $file = sprintf('<svg width="%d" height="%d"></svg>', $width, $height);
-
-    //     $svg = $this->lib[0];
-    //     $actual = $this->SVG->rewrapSvg($svg);
-
-    //     $this->assertIsInt($actual->width);
-    //     $this->assertEquals($width, $actual->width);
-
-    //     $this->assertIsInt($actual->height);
-    //     $this->assertEquals($height, $actual->height);
-    // }
 
     public function testAddClasses()
     {
@@ -177,9 +159,25 @@ final class NormalizeSvgTest extends TestCase
         $svg = $this->lib[0];
         $svg->attributes = [];
         $svg->width = null;
-        $svg->height= null;
+        $svg->height = null;
 
         $actual = $this->SVG->rewrapSvg($svg);
         $this->assertStringNotContainsString('viewBox', $actual->svg);
+    }
+
+    public function testBadViewBox()
+    {
+        $w = 50;
+        $h = 40;
+        $actual = $this->SVG->normalizeSvg("<svg viewbox='0 1 2' height='$h' width='$w'></svg>");
+        $expected = "0 0 $w $h";
+        $this->assertEquals($expected, $actual->attributes['viewBox']);
+    }
+
+    public function testBadSVG()
+    {
+        $actual = $this->SVG->normalizeSvg('not xml');
+        $this->assertIsObject($actual);
+        $this->assertObjectHasProperty('error', $actual);
     }
 }
