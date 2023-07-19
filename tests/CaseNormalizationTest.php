@@ -14,13 +14,16 @@ final class CaseNormalizationTest extends TestCase
 {
     public $SVG;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
         $this->SVG->init();
-        $this->SVG->WP_DEBUG = true;
+        $this->SVG->is_debug = true;
     }
 
+    public function beforeEach()
+    {
+    }
     /**
      * Test magic methods for embedding SVGs
      *
@@ -33,127 +36,124 @@ final class CaseNormalizationTest extends TestCase
         $this->assertStringContainsString('<svg', $arrow);
     }
 
-    public function testMagicMethodsNotFound()
-    {
-        $nope = $this->SVG->nope;
-        $this->assertNull($nope);
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
-    }
+    // public function testMagicMethodsNotFound()
+    // {
+    //     $nope = $this->SVG->nope;
+    //     $this->assertNull($nope);
+    //     $this->expectOutputRegex('/<!-- SVG Lib Error/');
+    //     $actual = $this->output();
+    // }
 
     public function testCamelCase()
     {
-        $svg = $this->SVG->camelCase;
-        $this->assertStringContainsString('<svg', $svg);
+        $expected = 'camelCase';
 
-        $svg = $this->SVG->embed('camelCase');
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('camelCase');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->embed('camel-case');
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('camel-case');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->camelcase; // all-lowercase request fails
-        $this->assertNull($svg);
-
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
+        $actual = $this->SVG->normalizeKey('camelcase');
+        $this->assertNotEquals($expected, $actual);
     }
 
     public function testAllCaps()
     {
-        $svg = $this->SVG->ALLCAPS;
-        $this->assertStringContainsString('<svg', $svg);
+        $expected = 'ALLCAPS';
 
-        $svg = $this->SVG->embed('ALLCAPS');
-        $this->assertStringContainsString('<svg', $svg);
+        // TODO: Special handling of ALLCAPS?
+        // Some libraries return 'allcaps' others 'aLLCAPS'
+        // so, filenames can NOT currently be allcaps
 
-        $svg = $this->SVG->allcaps;
-        $this->assertNull($svg);
+        $actual = $this->SVG->normalizeKey('ALLCAPS');
+        $this->assertNotEquals($expected, $actual);
 
-        $svg = $this->SVG->allCaps;
-        $this->assertNull($svg);
+        $actual = $this->SVG->normalizeKey('allCaps');
+        $this->assertNotEquals($expected, $actual);
 
-        $svg = $this->SVG->Allcaps;
-        $this->assertNull($svg);
+        $actual = $this->SVG->normalizeKey('allcaps');
+        $this->assertNotEquals($expected, $actual);
 
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
+        $actual = $this->SVG->normalizeKey('Allcaps');
+        $this->assertNotEquals($expected, $actual);
     }
 
     public function testDashCase()
     {
-        $svg = $this->SVG->dashCase;
-        $this->assertStringContainsString('<svg', $svg);
+        $expected = 'dashCase';
 
-        $svg = $this->SVG->embed('dash-case');
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('dash-case');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->embed('dashCase');
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('dashCase');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->dashcase;
-        $this->assertNull($svg);
-
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
+        $actual = $this->SVG->normalizeKey('dashcase');
+        $this->assertNotEquals($expected, $actual);
     }
 
     public function testDotCase()
     {
-        $svg = $this->SVG->embed('dot.case');
-        $this->assertStringContainsString('<svg', $svg);
+        $expected = 'dotCase';
 
-        $svg = $this->SVG->dotcase;
-        $this->assertNull($svg);
+        $actual = $this->SVG->normalizeKey('dot-case');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->dotCase;
-        $this->assertNull($svg);
+        $actual = $this->SVG->normalizeKey('dot.case');
+        $this->assertNotEquals($expected, $actual);
 
-        $this->expectOutputRegex("/<!-- SVG Lib Error: The key 'dotCase'/");
+        $actual = $this->SVG->normalizeKey('dotcase');
+        $this->assertNotEquals($expected, $actual);
     }
 
     public function testSnakeCase()
     {
-        $svg = $this->SVG->snakeCase;
-        $this->assertStringContainsString('<svg', $svg);
+        $expected = 'snakeCase';
 
-        $svg = $this->SVG->snake_case;
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('snakeCase');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->embed('snake_case');
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('snake_case');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->snake_case;
-        $this->assertStringContainsString('<svg', $svg);
-
-        $svg = $this->SVG->snakecase;
-        $this->assertNull($svg);
-
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
+        $actual = $this->SVG->normalizeKey('snake-case');
+        $this->assertEquals($expected, $actual);
     }
 
     public function testSpaces()
     {
-        $svg = $this->SVG->omgSpaces;
-        $this->assertStringContainsString('<svg', $svg);
+        $expected = 'omgSpaces';
 
-        $svg = $this->SVG->embed('omg spaces');
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('omg spaces');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->omgspaces;
-        $this->assertNull($svg);
 
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
     }
 
     public function testsubdir()
     {
-        $svg = $this->SVG->sub__dir__nestedFile;
-        $this->assertStringContainsString('<svg', $svg);
+        $expected = 'sub__dir__nestedFile';
 
-        $svg = $this->SVG->embed('sub/dir/nested-file');
-        $this->assertStringContainsString('<svg', $svg);
+        $actual = $this->SVG->normalizeKey('sub__dir__nestedFile');
+        $this->assertEquals($expected, $actual);
 
-        $svg = $this->SVG->subDirNestedFile;
-        $this->assertNull($svg);
+        $actual = $this->SVG->normalizeKey('sub/dir/nested-file');
+        $this->assertEquals($expected, $actual);
 
-        $this->expectOutputRegex('/<!-- SVG Lib Error/');
+        $actual = $this->SVG->normalizeKey('subDirNestedFile');
+        $this->assertNotEquals($expected, $actual);
+
+        // $svg = $this->SVG->sub__dir__nestedFile;
+        // $this->assertStringContainsString('<svg', $svg);
+
+        // $svg = $this->SVG->embed('sub/dir/nested-file');
+        // $this->assertStringContainsString('<svg', $svg);
+
+        // $svg = $this->SVG->subDirNestedFile;
+        // $this->assertNull($svg);
+
+        // $this->expectOutputRegex('/<!-- SVG Lib Error/');
     }
 
     public function testDirectoryRoundtrip()

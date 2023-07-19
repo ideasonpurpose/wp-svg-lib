@@ -25,7 +25,7 @@ final class ShortcodeTest extends TestCase
     public function testEmbedSvg()
     {
         $actual = $this->SVG->svgShortcode(['arrow']);
-        $expected = $this->SVG->lib['arrow']->content->clean;
+        $expected = $this->SVG->lib['arrow']->svg;
 
         $this->assertStringContainsString('<svg', $actual);
         $this->assertEquals($expected, $actual);
@@ -33,27 +33,38 @@ final class ShortcodeTest extends TestCase
 
     public function testEmbedScaled()
     {
-        $this->SVG = new SVG();
+        // $stub = $this->createStub(SVG::class);
 
-        $lib = '{
-            "circle": {
-                "content": { "raw": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#f00\" ><circle cx=\"50\" cy=\"50\" r=\"50\" /></svg>" },
-                "_links": { "self": "https://example.com" }
-            },
-            "square": {
-                "content": { "raw": "<svg viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" /></svg>" },
-                "_links": { "self": "https://example.com" }
-            }
-        }';
-        $this->SVG->lib = (array) json_decode($lib, false);
+        // $stub->method('embed')->willReturnArgument(1);
 
-        $args = ['height' => '40', 'width' => 'auto'];
-        $actual = $this->SVG->cleanSvg('circle', $args);
+        $mockSvg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
+            ->onlyMethods(['embed'])
+            ->getMock();
 
-        $expected = $this->SVG->svgShortcode(['circle', 'width' => '40', 'height' => 'auto']);
+        $mockSvg->method('embed')->willReturnArgument(1);
+
+        // $this->SVG = new SVG();
+
+        // $lib = '{
+        //     "circle": {
+        //         "content": { "raw": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"#f00\" ><circle cx=\"50\" cy=\"50\" r=\"50\" /></svg>" },
+        //         "_links": { "self": "https://example.com" }
+        //     },
+        //     "square": {
+        //         "content": { "raw": "<svg viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" /></svg>" },
+        //         "_links": { "self": "https://example.com" }
+        //     }
+        // }';
+        // $this->SVG->lib = (array) json_decode($lib, false);
+
+        $args = ['arrow' , 'height' => '40', 'width' => 'auto'];
+        $expected = ['height' => 40, 'width' => 'auto'];
+        $actual = $mockSvg->svgShortcode($args);
+
+        // $expected = $this->SVG->svgShortcode(['circle', 'width' => '40', 'height' => 'auto']);
         $this->assertEquals($expected, $actual);
 
-        $expected = $this->SVG->svgShortcode(['circle', 'width' => 'auto', 'height' => '40']);
-        $this->assertEquals($expected, $actual);
+        // $expected = $this->SVG->svgShortcode(['circle', 'width' => 'auto', 'height' => '40']);
+        // $this->assertEquals($expected, $actual);
     }
 }

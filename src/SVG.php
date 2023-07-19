@@ -22,6 +22,10 @@ use Doctrine\Inflector\InflectorFactory;
  */
 class SVG
 {
+    use Deprecated\Directory;
+    use Deprecated\Get;
+    use Deprecated\DumpSymbols;
+    use Deprecated\LibFill;
     public $lib = [];
 
     /**
@@ -100,7 +104,7 @@ class SVG
         if ($this->lib === false) {
             $this->lib = [];
             $this->loadFromDirectory($this->libDir);
-            $this->libfill();
+            // $this->libfill();
             $this->lib['_from_transient'] = false;
 
             set_transient($this->transient, $this->lib, 12 * HOUR_IN_SECONDS);
@@ -172,6 +176,8 @@ class SVG
      */
     public function rewrapSvg($svg, $attributes = [])
     {
+        // ~d($attributes);
+        // d($svg);
         $esc_atts = array_map('urlencode', $attributes);
         $svg->_links->self = add_query_arg($esc_atts, $svg->_links->self);
         $svg->_links->svg = add_query_arg($esc_atts, $svg->_links->svg);
@@ -179,7 +185,7 @@ class SVG
         $aspect = $svg->aspect;
         $width = $svg->width;
         $height = $svg->height;
-        $viewBox = explode(' ', $svg->attributes['viewBox']);
+        $viewBox = explode(' ', $svg->attributes['viewBox'] ?? '');
 
         $newWidth = array_key_exists('width', $attributes) ? $attributes['width'] : null;
         $newHeight = array_key_exists('height', $attributes) ? $attributes['height'] : null;
@@ -244,7 +250,7 @@ class SVG
      *              'attributes' => Object
      *              }
      */
-    public function normalizeSvg($rawSVGString, $args = [])
+    public function normalizeSvg($rawSVGString)
     {
         // $svg = null;
         // $aspect = 1;
@@ -317,9 +323,6 @@ class SVG
     }
 
     /**
-     *
-     * TODO: This could roll up into rewrapSvg, just pass a simple opening tag if there are no args?
-     *
      * Wraps $contents with an SVG container. The opening tag is constructed from a restricted
      * list of key=>value $attributes. Attribute order is enforced:
      *     id, class, width, height, viewBox, xmlns
@@ -328,11 +331,9 @@ class SVG
      * @param array $attributes
      * @return string
      */
-    public function wrapSvg($contents, $attributes)
+    public function wrapSvg($contents, $attributes = [])
     {
-        $atts = array_fill_keys(['id', 'class', 'width', 'height', 'viewBox'], '');
-        $atts = array_replace($atts, array_intersect_key($attributes, $atts));
-        $atts = array_filter($atts, 'strlen');
+        $atts = $this->validateAttributes($attributes);
 
         $tag = '<svg';
         foreach ($atts as $label => $value) {
@@ -376,11 +377,12 @@ class SVG
         $key = $this->normalizeKey($name);
 
         if (!array_key_exists($key, $this->lib) || !property_exists($this->lib[$key], 'svg')) {
-            if ($this->is_debug) {
-                $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
-                error_log($error);
-                echo "\n<!-- $error -->\n\n";
-            }
+            // TODO: Move this into Fetch, return a proper WP_Error object
+            // if ($this->is_debug) {
+            //     $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
+            //     error_log($error);
+            //     echo "\n<!-- $error -->\n\n";
+            // }
             return false;
         }
         return true;
@@ -392,25 +394,61 @@ class SVG
     }
 
     /**
+     * TODO: Alternate name, getSVG() ??
+     * @param string $key
+     * @param array $attributes
+     * @return object | WP_Error
+     */
+    public function fetch($key, $attributes = [])
+    {
+        $name = $this->normalizeKey($key);
+
+        if ($name && $this->hasSVG($name)) {
+            $svg = $this->lib[$name];
+            $svg = $this->removePrivateKeys($svg);
+
+            $svg->name = $name;
+            $atts = $this->validateAttributes($attributes);
+            $svg = $this->rewrapSvg($svg, $atts);
+            return $svg;
+        }
+
+        // TODO: What happens if there's no entry for this name? -- do this:
+        return new \WP_Error(404, 'Invalid SVG identifier', ['status' => 404]);
+        // When to suppress errors? When to show? REST should always show errors
+    }
+
+    /**
+     * Alias for $this->fetch()
+     * @param mixed $key
+     * @param mixed $attributes
+     * @return void
+     */
+    public function getSVG($key, $attributes = [])
+    {
+        return $this->fetch($key, $attributes);
+    }
+
+    /**
      * Inline SVGs directly by name
      * '.svg' extensions are stripped, so 'arrow' and 'arrow.svg' will both return the 'arrow.svg' file
      *
      * NOTE: The magic __get method can only accept a single argument, so embed must be
      * called directly if args are being used.
      *
-     * // TODO: Fix this type def
-     * @param $args {[width?: [Number|'auto'], height?: <Number|'auto'>, class?: String}]
-     *
+     * @param string $key
+     * @param array $attributes
+     * @return mixed
      */
-    public function embed($key, $args = [])
+    public function embed($key, $attributes = [])
     {
-        $name = $this->normalizeKey($key);
-
-        if ($this->hasSVG($name)) {
-            // TODO: Is it possible for cleanSVG to return null?
-
-            return $this->rewrapSvg($name, $args); //?? $this->lib[$name]->content->raw;
+        $svg = $this->fetch($key, $attributes);
+        if (is_WP_Error($svg)) {
+            $template = $this->is_debug ? '<text y="20" fill="red">Error: %s</text>' : '"\n<!-- Error: %s -->\n"';
+            $err = sprintf($template, $svg->get_error_message());
+            return $this->wrapSvg($err);
         }
+        return $svg->svg;
     }
 
     /**
@@ -427,28 +465,6 @@ class SVG
             array_push($this->inUse, $name);
             return sprintf('<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>', $name);
         }
-    }
-
-    /**
-     * Deprecated legacy method to include SVGs as linked symbols. Aliased to SVG::use
-     * Calls to SVG::get will print a warning, rename these to SVG::use or switch to
-     * direct embeds.
-     * @deprecated
-     */
-    public function get($name)
-    {
-        echo "\n\n<!-- The get method is deprecated. Switch to `use` instead. --> ";
-        return $this->use($name);
-    }
-
-    /**
-     * Alias for `debug`
-     * @deprecated
-     */
-    public function directory()
-    {
-        echo "\n\n<!-- The directory method is deprecated --> ";
-        $this->debug();
     }
 
     /**
@@ -497,82 +513,6 @@ class SVG
     }
 
     /**
-     * Copies static variables into $this->lib
-     * This is largely for compatibility since we've previously been echoing static variables as needed
-     * In the future, this can be refactored away and SVG content can be directly entered into $this->lib
-     *
-     * Note: `get_class_vars(get_called_class())` pulls static vars in from the child class
-     *
-     * @deprecated
-     */
-    private function libFill()
-    {
-        $has_static_vars = false;
-        $static_vars = get_class_vars(get_called_class());
-        foreach ($static_vars as $key => $svg) {
-            if (is_string($svg) && substr($svg, 0, 4) == '<svg') {
-                $newKey = $this->normalizeKey($key);
-
-                /**
-                 * This is copied directly from $this-loadFromDirectory
-                 * Loading Static SVGs from a child class is deprecated,
-                 * so all of this will eventually go away
-                 */
-                $restSelf = get_rest_url(null, "{$this->rest_base}/{$key}");
-
-                $this->lib[$newKey] = (object) [
-                    'content' => (object) ['raw' => $svg],
-                    '_links' => (object) [
-                        'self' => $restSelf,
-                        'collection' => get_rest_url(null, "{$this->rest_base}"),
-                        'raw' => add_query_arg(['raw' => ''], $restSelf . '.svg'),
-                    ],
-                ];
-                $has_static_vars = true;
-            }
-        }
-        // Only sort if static vars have been added
-        if ($has_static_vars) {
-            ksort($this->lib);
-            echo "\n\n<!-- Loading SVGs from static child classes is deprecated. Load from a directory instead. -->\n";
-        }
-    }
-
-    /**
-     * Prints an SVG containing all the symbols referenced in the document.
-     *
-     * @deprecated
-     */
-    public function dumpSymbols()
-    {
-        echo "\n\n<!-- SVG:dumpSymbols is deprecated. View the full list of SVGs from the Rest API. -->\n";
-
-        if (count($this->inUse)) {
-            $this->inUse = array_unique($this->inUse);
-            sort($this->inUse);
-            $symbols = array_map(function ($key) {
-                return preg_replace(
-                    ['%<svg .*(viewbox="[^"]*")[^>]*>(.*)%i', '%</svg>%'],
-                    ["    <symbol id=\"$key\" $1>$2", '</symbol>'],
-                    $this->lib[$key]->svg
-                );
-            }, $this->inUse);
-            $symbols = implode("\n", $symbols);
-            printf("<svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>\n%s\n</svg>\n", $symbols);
-        } else {
-            if (is_user_logged_in()) {
-                echo "<!-- NO SVGs IN USE -->\n";
-
-                if ($this->is_debug) {
-                    $trace = array_map(fn($i) => $i['file'] . ':' . $i['line'], debug_backtrace());
-                    $trace = implode("\n\t", $trace);
-                    printf("<!-- SVG::dumpSymbols call stack:\n\t%s\n -->\n", $trace);
-                }
-            }
-        }
-    }
-
-    /**
      * Register REST routes to return SVG listings and individual files
      *
      * Note that rest_route declaration order matters. Rules with the most specificity should appear first
@@ -602,32 +542,27 @@ class SVG
 
     public function returnSvgFile(\WP_REST_Request $req)
     {
-        $name = $req->get_param('name');
-        if ($this->hasSVG($name)) {
-            $atts = $this->getAttributesFromRestParams($req);
-            $svg = $this->lib[$name];
-            $svg = $this->rewrapSvg($svg, $atts);
-
-            // NOTE: Disable header to debug SVG contents in the browser
-            // header('Content-type: image/svg+xml');
-            return $this->exit($svg->svg);
-        }
+        // NOTE: Disable header to debug SVG contents in the browser
+        header('Content-type: image/svg+xml');
+        return $this->exit($this->embed($req->get_param('name'), $req->get_params()));
     }
 
     /**
      * Check for $this->is_debug and remove private underscore-prefixed keys when false
-     * @param object $res
+     * @param object $svg
      * @return object
      */
-    public function removePrivateKeys($res)
+    public function removePrivateKeys($svg)
     {
+        // d(is_iterable($svg));
         // $this->is_debug = false; // debug toggle
-        if (!is_iterable($res) || $this->is_debug) {
-            return $res;
+        // if (!is_iterable($svg) || $this->is_debug) {
+        if ($this->is_debug) {
+            return $svg;
         }
         $clean = (object) [];
 
-        foreach ($res as $key => $value) {
+        foreach ($svg as $key => $value) {
             if (substr($key, 0, 2) == '__') {
                 continue;
             }
@@ -641,16 +576,10 @@ class SVG
     {
         $name = $this->normalizeKey($req->get_param('name'));
 
-        if ($name && $this->hasSVG($name)) {
-            /**
-             * Only apply attributes to requests for a single SVG
-             */
-            $atts = $this->getAttributesFromRestParams($req);
-            $svg = $this->lib[$name];
-            $svg = $this->removePrivateKeys($svg);
-            $svg->name = $name;
-            $svg = $this->rewrapSvg($svg, $atts);
-            return rest_ensure_response($svg);
+        // d($req, $name);
+        $svg = $this->fetch($name, $req->get_params());
+        if ($svg) {
+            return $svg;
         }
 
         $lib = (object) [];
@@ -661,27 +590,30 @@ class SVG
     }
 
     /**
-     * Extract and validate known attributes from REST Request Params
-     * Supported parameters: id, class, width, height
+     * Validates an input dimension is either a positive integer or the string 'auto'
+     * Does not return if $dim is invalid.
+     * @param mixed $dim
+     * @return integer |  string
      */
-    public function getAttributesFromRestParams(\WP_REST_Request $req)
+    public function validateDimension($dim)
     {
-        $atts = [];
-        $atts['id'] = (string) $req->get_param('id');
-        $atts['class'] = (string) $req->get_param('class');
+        if (is_numeric($dim) && intval($dim) > 0) {
+            return intval($dim);
+        } elseif (strtolower($dim) === 'auto') {
+            return 'auto';
+        }
+    }
 
-        /**
-         * Only store height/width if they are 'auto' or positive integers
-         */
-        $pattern = '/^(?:auto|[0-9]+)$/i';
-        $width = (string) $req->get_param('width');
-        $height = (string) $req->get_param('height');
-        $width = preg_match($pattern, $width) ? strtolower($width) : '';
-        $height = preg_match($pattern, $height) ? strtolower($height) : '';
-        $atts['width'] = $width === 'auto' ? $width : intval($width);
-        $atts['height'] = $height === 'auto' ? $height : intval($height);
-
-        return array_filter($atts, 'strlen');
+    public function validateAttributes($attributes)
+    {
+        $newAtts = [];
+        $newAtts['id'] = $attributes['id'] ?? null;
+        $newAtts['class'] = $attributes['class'] ?? null;
+        $newAtts['width'] = $this->validateDimension($attributes['width'] ?? '');
+        $newAtts['height'] = $this->validateDimension($attributes['height'] ?? '');
+        $newAtts['viewBox'] = $attributes['viewBox'] ?? null;
+        $newAtts = array_filter($newAtts);
+        return $newAtts;
     }
 
     /**
