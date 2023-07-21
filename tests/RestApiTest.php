@@ -112,8 +112,8 @@ final class RestApiTest extends TestCase
             ->method('exit')
             ->willReturnArgument(0);
 
-        $req = new WP_REST_Request(['name' => 'arrow']);
-        $mockSvg->returnSvgFile($req);
+        // $req = new WP_REST_Request(['name' => 'arrow']);
+        $mockSvg->returnSvgFile('arrow');
 
         /**
          * xdebug_get_headers
@@ -142,7 +142,7 @@ final class RestApiTest extends TestCase
         $register_rest_route = [];
         $this->SVG->registerRestRoutes();
 
-        $this->assertCount(3, $register_rest_route);
+        $this->assertCount(2, $register_rest_route);
     }
 
     /**

@@ -5,7 +5,6 @@ namespace IdeasOnPurpose\WP;
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
 
-
 Test\Stubs::init();
 /**
 
@@ -83,7 +82,7 @@ final class SVGTest extends TestCase
             ->getMock();
 
         $svg->is_debug = true;
-        $err_message = "PHPUnit Error";
+        $err_message = 'PHPUnit Error';
         $err = new \WP_ERROR(123, $err_message);
         $svg->method('fetch')->willReturn($err);
 

@@ -158,7 +158,8 @@ class SVG
                 $svg->_links = (object) [
                     'self' => $restSelf, // url pointing to a JSON representation including any query vars
                     'collection' => get_rest_url(null, "{$this->rest_base}"), // Collection of all SVGs, query vars ignored
-                    'svg' => $restSelf . '.svg',
+                    // 'svg' => $restSelf . '.svg',
+                    'svg' => add_query_arg(['svg' => 1], $restSelf),
                     'src' => $srcUrl, // direct url to the source file
                 ];
 
@@ -230,8 +231,10 @@ class SVG
             $attributes['viewBox'] = implode(' ', $viewBox);
         }
 
-        $svg->old_attributes = $svg->attributes;
-        $svg->attributes = $attributes;
+        if ($svg->attributes != $attributes) {
+            $svg->original_attributes = $svg->attributes;
+            $svg->attributes = $attributes;
+        }
         $svg->svg = $this->wrapSvg($svg->innerContent, $attributes);
 
         return $svg;
@@ -408,7 +411,7 @@ class SVG
             $svg = $this->lib[$name];
             $svg = $this->removePrivateKeys($svg);
 
-            $svg->name = $name;
+            // $svg->name = $name;
             $atts = $this->validateAttributes($attributes);
             $svg = $this->rewrapSvg($svg, $atts);
             return $svg;
@@ -523,11 +526,11 @@ class SVG
     {
         // d($this->rest_base);
 
-        register_rest_route($this->rest_namespace, "/{$this->rest_route}/(?P<name>[^/]*)\.svg", [
-            'methods' => \WP_REST_Server::READABLE,
-            'callback' => [$this, 'returnSvgFile'],
-            'permission_callback' => '__return_true',
-        ]);
+        // register_rest_route($this->rest_namespace, "/{$this->rest_route}/(?P<name>[^/]*)\.svg", [
+        //     'methods' => \WP_REST_Server::READABLE,
+        //     'callback' => [$this, 'returnSvgFile'],
+        //     'permission_callback' => '__return_true',
+        // ]);
 
         register_rest_route($this->rest_namespace, "/{$this->rest_route}/(?P<name>[^/]*)", [
             'methods' => \WP_REST_Server::READABLE,
@@ -542,13 +545,6 @@ class SVG
         ]);
     }
 
-    public function returnSvgFile(\WP_REST_Request $req)
-    {
-        // NOTE: Disable header to debug SVG contents in the browser
-        header('Content-type: image/svg+xml');
-        return $this->exit($this->embed($req->get_param('name'), $req->get_params()));
-    }
-
     /**
      * Check for $this->is_debug and remove private underscore-prefixed keys when false
      * @param object $svg
@@ -556,9 +552,6 @@ class SVG
      */
     public function removePrivateKeys($svg)
     {
-        // d(is_iterable($svg));
-        // $this->is_debug = false; // debug toggle
-        // if (!is_iterable($svg) || $this->is_debug) {
         if ($this->is_debug) {
             return $svg;
         }
@@ -576,7 +569,8 @@ class SVG
 
     public function restResponse(\WP_REST_Request $req)
     {
-        $name = $this->normalizeKey($req->get_param('name'));
+        // $name = $this->normalizeKey($req->get_param('name'));
+        $name = $req->get_param('name');
 
         if (!$name) {
             $lib = (object) [];
@@ -586,10 +580,25 @@ class SVG
             return rest_ensure_response($lib);
         }
 
-        $svg = $this->fetch($name, $req->get_params());
-        if ($svg) {
-            return $svg;
+        $atts = $req->get_params();
+
+        if ($req->get_param('svg') !== null && $req->get_param('svg') !== '0') {
+            return $this->returnSvgFile($name, $atts);
         }
+
+        return rest_ensure_response($this->fetch($name, $atts));
+        // $svg = $this->fetch($name, $atts);
+        // if ($svg) {
+        //     return rest_ensure_response($svg);
+        // }
+    }
+
+    // public function returnSvgFile(\WP_REST_Request $req)
+    public function returnSvgFile($name, $atts = [])
+    {
+        // NOTE: Disable header to debug SVG contents in the browser
+        header('Content-type: image/svg+xml');
+        return $this->exit($this->embed($name, $atts));
     }
 
     /**

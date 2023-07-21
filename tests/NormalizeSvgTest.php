@@ -180,4 +180,24 @@ final class NormalizeSvgTest extends TestCase
         $this->assertIsObject($actual);
         $this->assertObjectHasProperty('error', $actual);
     }
+
+    public function testNoOriginalAttributes(): void
+    {
+        $args = [];
+
+        $svg = $this->lib[0];
+        $svg->attributes['viewBox'] = '0 0 24 24';
+        $actual = $this->SVG->rewrapSvg($svg, $args);
+        $this->assertObjectNotHasProperty('original_attributes', $actual);
+    }
+
+    public function testAddOriginalAttributes(): void
+    {
+        $args = ['width' => 44];
+
+        $svg = $this->lib[0];
+        $svg->attributes['viewBox'] = '0 0 24 24';
+        $actual = $this->SVG->rewrapSvg($svg, $args);
+        $this->assertObjectHasProperty('original_attributes', $actual);
+    }
 }
