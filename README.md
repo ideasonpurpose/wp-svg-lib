@@ -27,7 +27,7 @@ new IdeasOnPurpose\WP\SVG;
 new IdeasOnPurpose\WP\SVG(get_theme_directory() . '/icons/svg');
 ```
 
-All SVG files below the directory  will be registered and available to template files. The library will inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.
+All SVG files below the directory will be registered and available to template files. The library will inject an `$SVG` query var so SVGs can be accessed from inside [`get_template_part()`][gtp] includes with no additional code.
 
 Install from [Packagist](https://packagist.org/packages/ideasonpurpose/wp-svg-lib), require it in **composer.json** or tell Composer to load the package:
 
@@ -49,7 +49,7 @@ That code outputs something like this:
 <div><svg viewBox="0 0 25 10">...</svg></div>
 ```
 
-The library  normalizes all file names to *camelCase* to help with embedding. Directory separators will be replaced with double-underscores. Some examples:
+The library normalizes all file names to _camelCase_ to help with embedding. Directory separators will be replaced with double-underscores. Some examples:
 
 ```php
 // the file 'icons/email-circle.svg' can be embedded as:
@@ -71,7 +71,6 @@ For convenience, SVG files can be embedded with or without their file extension.
 ```
 
 Note that name resolution is bi-directional. An SVG file named **dash-case.svg** can be embedded by either `dash-case` or `dashCase`. Likewise, a file named **camelCase.svg** will be accessible by either `camelCase` or `camel-case`.
-
 
 ### Inlining SVG Symbols
 
@@ -101,7 +100,7 @@ Files can be requested by name like this:
 - https://example.com/ideasonpurpose/v1/svg/arrowLeft
 - https://example.com/ideasonpurpose/v1/svg/icons__email
 
-Dimensions and classes can be injected using query vars:
+Dimensions, classes and IDs can be injected using query vars:
 
 - https://example.com/ideasonpurpose/v1/svg/arrowLeft?width=200&height=auto
 - https://example.com/ideasonpurpose/v1/svg/icons__email&class=social+blue
@@ -115,36 +114,50 @@ If either height or width are 'auto' then that value will be calculated from the
 Well-formed SVG files should return a data object like this:
 
 ```json
+
 {
-  "icons__email": {
-    "content": {
-      "raw": "<svg height=\"50\" width=\"48\" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 496 512\"><path d=\"M16 32c0z\"/></path></svg>",
-      "clean": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 496 512\"><path d=\"M16 32c0z\"/></path></svg>\n"
-    },
-    "src": "dist/images/svg/icons/email.svg",
-    "_links": {
-      "self": "https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email",
-      "collection": "https://example.com/wp-json/ideasonpurpose/v1/svg",
-      "raw": "https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email.svg?raw",
-      "clean": "https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email.svg"
-    },
-    "width": 48,
-    "height": 50,
-    "aspect": 0.96
+  "svg": "<svg viewBox=\"0 0 25 10\" xmlns=\"http://www.w3.org/2000/svg\"><path fill-rule=\"evenodd\" d=\"M0 5.57.01 4.4c12.59.08 18.84.08 18.77 0V0L25 4.99 18.77 10l.01-4.43H0Z\"/>\n</svg>",
+  "innerContent": "<path fill-rule=\"evenodd\" d=\"M0 5.57.01 4.4c12.59.08 18.84.08 18.77 0V0L25 4.99 18.77 10l.01-4.43H0Z\"/>\n",
+  "width": 25,
+  "height": 10,
+  "aspect": 2.5,
+  "attributes": {
+    "viewBox": "0 0 25 10"
+  },
+  "__srcPath": "/var/www/html/wp-content/themes/example/dist/images/svg/arrow.svg",
+  "_links": {
+    "self": "https://example.com/wp-json/ideasonpurpose/v1/svg/arrow",
+    "collection": "https://example.com/wp-json/ideasonpurpose/v1/svg",
+    "svg": "https://example.com/wp-json/ideasonpurpose/v1/svg/arrow?svg=1",
+    "src": "https://example.com/wp-content/themes/example/dist/images/svg/arrow.svg"
   }
 }
 ```
 
-The `_links.raw` and `_links.clean` values (endpoints include the `.svg` extension) will return with `Content-type: image/svg+xml` headers and can be used to display the SVG file directly in the browser. 
+### Properties:
+
+* `svg` - A rewrapped SVG with a cleaned subset of attributes
+* `innerContent` - The contents of the SVG with enclosing tags stripped off. Used in the Block Editor in place of pre-processed [SVGR objects](https://react-svgr.com/docs/what-is-svgr/). 
+* `width` - Derived width of the file, either extracted from viewBox or read from attributes.
+* `height` - Derived height of the file, either extracted from viewBox or read from attributes.
+* `aspect` - Convenience value, derived width divided by derived height. 
+* `attributes` - Array of attributes to appear in the `<svg>` tag. Valid attributes include: `id`, `class`, `height`, `width` and `viewBox`
+* `_links` - Array of related URLs:
+  * `self`
+  * `collection` (all available SVGs)
+  * `svg` - Returns with `Content-type: image/svg+xml` headers and can be used to display the SVG file directly in the browser.
+  * `src` - Direct link to the unmodified source SVG file
+* `original_attributes` - The unmodified array of cleaned attributes. Only appears for requests with modified attributes. 
+* `__srcPath` - Filesystem path of the source SVG. _[Debug only]_ 
+
 
 ### Removed Attributes and Optimization
 
-All attributes except `viewBox` and `xmlns` are removed from`clean` valid SVG files, but the `raw` unmodified original files are also available.
+All attributes except `viewBox` and `xmlns` are removed from`clean` valid SVG files, but the unmodified `src` files are also available.
 
-Invalid SVGs pass through to `raw` without modification. Error details will be added to the JSON data object.
+Invalid SVGs pass through to `src` without modification. Error details will be added to the JSON data object.
 
 Other than the opening `<svg>` tag, vector data is not optimized in any way. Please use something like [svgo][] to optimize SVG files.
-
 
 ## Shortcodes
 
@@ -180,11 +193,9 @@ In this example, the `square` SVG will be shown instead of `circle`:
 * What happens if there's no viewBox?
   - ViewBox will be added if it can be derived from supplied `height` and `width` attributes. If there are no dimensions and no viewBox, nothing will be added to the opening `<svg>` tag.
 
-
 ### Cleaning Quirks
 
-`<svg></svg` is a valid, though useless SVG document. Internally, the cleaner will returned zero for width and height, with an aspect ratio of 1. 
-
+`<svg></svg` is a valid, though useless SVG document. Internally, the cleaner will returned zero for width and height, with an aspect ratio of 1.
 
 [svgo]: https://www.npmjs.com/package/svgo
 [docker-build]: https://github.com/ideasonpurpose/docker-build
