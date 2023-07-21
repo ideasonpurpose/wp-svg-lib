@@ -158,7 +158,6 @@ class SVG
                 $svg->_links = (object) [
                     'self' => $restSelf, // url pointing to a JSON representation including any query vars
                     'collection' => get_rest_url(null, "{$this->rest_base}"), // Collection of all SVGs, query vars ignored
-                    // 'svg' => $restSelf . '.svg',
                     'svg' => add_query_arg(['svg' => 1], $restSelf),
                     'src' => $srcUrl, // direct url to the source file
                 ];
@@ -245,20 +244,18 @@ class SVG
      *
      * @param  string $rawSVGString - A blob of SVG content
      * @return object {
-     * TODO: UPDATE THIS
      *              'svg' => String,
      *              'innerContent' => String,
      *              'width' => 'Integer',
      *              'height' => Integer,
      *              'aspect' => Float,
-     *              'attributes' => Object
+     *              'attributes' => Array,
+     *              '__srcPath` => String (Debug only)
+     *              '_links' => Object
      *              }
      */
     public function normalizeSvg($rawSVGString)
     {
-        // $svg = null;
-        // $aspect = 1;
-
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string(trim($rawSVGString));
 
@@ -381,12 +378,6 @@ class SVG
         $key = $this->normalizeKey($name);
 
         if (!array_key_exists($key, $this->lib) || !property_exists($this->lib[$key], 'svg')) {
-            // TODO: Move this into Fetch, return a proper WP_Error object
-            // if ($this->is_debug) {
-            //     $error = "SVG Lib Error: The key '$key' does not match any registered SVGs";
-            //     error_log($error);
-            //     echo "\n<!-- $error -->\n\n";
-            // }
             return false;
         }
         return true;
@@ -524,14 +515,6 @@ class SVG
      */
     public function registerRestRoutes()
     {
-        // d($this->rest_base);
-
-        // register_rest_route($this->rest_namespace, "/{$this->rest_route}/(?P<name>[^/]*)\.svg", [
-        //     'methods' => \WP_REST_Server::READABLE,
-        //     'callback' => [$this, 'returnSvgFile'],
-        //     'permission_callback' => '__return_true',
-        // ]);
-
         register_rest_route($this->rest_namespace, "/{$this->rest_route}/(?P<name>[^/]*)", [
             'methods' => \WP_REST_Server::READABLE,
             'callback' => [$this, 'restResponse'],
@@ -569,7 +552,6 @@ class SVG
 
     public function restResponse(\WP_REST_Request $req)
     {
-        // $name = $this->normalizeKey($req->get_param('name'));
         $name = $req->get_param('name');
 
         if (!$name) {
@@ -587,13 +569,8 @@ class SVG
         }
 
         return rest_ensure_response($this->fetch($name, $atts));
-        // $svg = $this->fetch($name, $atts);
-        // if ($svg) {
-        //     return rest_ensure_response($svg);
-        // }
     }
 
-    // public function returnSvgFile(\WP_REST_Request $req)
     public function returnSvgFile($name, $atts = [])
     {
         // NOTE: Disable header to debug SVG contents in the browser

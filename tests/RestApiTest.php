@@ -56,32 +56,64 @@ final class RestApiTest extends TestCase
         $this->assertObjectHasProperty('arrow', $actual);
     }
 
-    public function testSelfHasQuery()
+    public function testReturnsSVGFile(): void
     {
-        $req = new WP_REST_Request(['name' => 'arrow', 'width' => 123]);
-        $actual = $this->SVG->restResponse($req);
-        // d($req, $actual);
-        $this->assertTrue(true);
+        $mockSvg = $this->getMockBuilder(\IdeasOnPurpose\WP\SVG::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['returnSvgFile'])
+            ->getMock();
+
+        $mockSvg
+            ->expects($this->exactly(2))
+            ->method('returnSvgFile')
+            ->willReturnArgument(0);
+
+        /**
+         * $args['svg'] is null
+         */
+        $name = 'arrow';
+        $args = ['name' => $name];
+        $req = new WP_REST_Request($args);
+        $actual = $mockSvg->restResponse($req);
+        $this->assertIsObject($actual);
+
+        /**
+         * $args['svg'] is the string "0" (zero)
+         * NOTE: all WP_REST_Request params are strings because they're $_GET vars
+         */
+        $args['svg'] = '0';
+        $req = new WP_REST_Request($args);
+        $actual = $mockSvg->restResponse($req);
+        $this->assertIsObject($actual);
+
+        /**
+         * $args['svg'] is a string
+         */
+        $args['svg'] = 'false';
+        $req = new WP_REST_Request($args);
+        $actual = $mockSvg->restResponse($req);
+        $this->assertEquals($actual, $name);
+
+        /**
+         * $args['svg'] is numeric string
+         */
+        $args['svg'] = '1';
+        $req = new WP_REST_Request($args);
+        $actual = $mockSvg->restResponse($req);
+        $this->assertEquals($actual, $name);
     }
-    /**
-     * Check that set_query_var is called when there are any SVGs in the library
-     *
-     * TODO: Move this out of the REST tests, should be in general
-     */
-    public function testValidateAttributes_good(): void
+
+    public function testSelfHasQuery(): void
     {
-        $classList = 'red green blue';
-        $attributes = ['width' => 'AUTO', 'height' => 123, 'class' => $classList];
+        $width = 123;
+        $req = new WP_REST_Request(['name' => 'arrow', 'width' => $width]);
+        $widthQuery = "width={$width}";
 
-        // $req = new WP_REST_Request($params);
+        $actual = $this->SVG->restResponse($req);
 
-        $actual = $this->SVG->validateAttributes($attributes);
-
-        $this->assertArrayHasKey('width', $actual);
-        $this->assertArrayHasKey('height', $actual);
-        $this->assertArrayHasKey('class', $actual);
-        $this->assertEquals('auto', $actual['width']);
-        $this->assertEquals($classList, $actual['class']);
+        $this->assertObjectHasProperty('_links', $actual);
+        $this->assertObjectHasProperty('self', $actual->_links);
+        $this->assertStringContainsString($widthQuery, $actual->_links->self);
     }
 
     public function testValidateAttributes_bad(): void

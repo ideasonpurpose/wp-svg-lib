@@ -176,6 +176,41 @@ final class SVGTest extends TestCase
         $this->assertStringNotContainsString('</div>', $actual);
     }
 
+    public function testNormalizeEmptyKey(): void
+    {
+        $actual = $this->SVG->normalizeKey('');
+        $this->assertEmpty($actual);
+    }
+    public function testNormalizeNullKey(): void
+    {
+        $actual = $this->SVG->normalizeKey(false);
+        $this->assertEmpty($actual);
+    }
+    public function testNormalizeFalseKey(): void
+    {
+        $actual = $this->SVG->normalizeKey(null);
+        $this->assertEmpty($actual);
+    }
+
+    /**
+     * Check that set_query_var is called when there are any SVGs in the library
+     */
+    public function testValidateAttributes_good(): void
+    {
+        $classList = 'red green blue';
+        $attributes = ['width' => 'AUTO', 'height' => 123, 'class' => $classList];
+
+        // $req = new WP_REST_Request($params);
+
+        $actual = $this->SVG->validateAttributes($attributes);
+
+        $this->assertArrayHasKey('width', $actual);
+        $this->assertArrayHasKey('height', $actual);
+        $this->assertArrayHasKey('class', $actual);
+        $this->assertEquals('auto', $actual['width']);
+        $this->assertEquals($classList, $actual['class']);
+    }
+
     // public function testStaticSVGs()
     // {
     //     /**
