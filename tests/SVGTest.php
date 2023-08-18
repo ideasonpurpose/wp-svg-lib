@@ -37,12 +37,10 @@ final class SVGTest extends TestCase
 
     public function testInit_transient()
     {
-        global $transients;
+        global $get_transient;
+        $get_transient = [];
 
         $this->SVG->is_debug = false;
-        $this->SVG->transient = 'transient_id';
-        $transients = [$this->SVG->transient => []];
-
         $this->SVG->init();
 
         $this->assertArrayHasKey('_from_transient', $this->SVG->lib);
