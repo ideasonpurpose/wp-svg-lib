@@ -97,17 +97,17 @@ This library adds the `/ideasonpurpose/v1/svg` endpoint to the WP-JSON API.
 
 Files can be requested by name like this:
 
-- https://example.com/ideasonpurpose/v1/svg/arrowLeft
-- https://example.com/ideasonpurpose/v1/svg/icons__email
+- https://example.com/wp-json/ideasonpurpose/v1/svg/arrowLeft
+- https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email
 
 Dimensions, classes and IDs can be injected using query vars:
 
-- https://example.com/ideasonpurpose/v1/svg/arrowLeft?width=200&height=auto
-- https://example.com/ideasonpurpose/v1/svg/icons__email&class=social+blue
+- https://example.com/wp-json/ideasonpurpose/v1/svg/arrowLeft?width=200&height=auto
+- https://example.com/wp-json/ideasonpurpose/v1/svg/icons__email&class=social+blue
 
 A listing of all registered SVGs is here:
 
-- https://example.com/ideasonpurpose/v1/svg/
+- https://example.com/wp-json/ideasonpurpose/v1/svg/
 
 If either height or width are 'auto' then that value will be calculated from the aspect ratio and the opposite dimension.
 
