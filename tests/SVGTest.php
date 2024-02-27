@@ -4,6 +4,7 @@ namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
+use stdClass;
 
 Test\Stubs::init();
 /**
@@ -19,38 +20,50 @@ function error_log($err)
  */
 final class SVGTest extends TestCase
 {
-    public $SVG;
+    // public $SVG;
 
     public function setUp(): void
     {
-        $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
-        $this->SVG->init();
+        // $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
+        // $this->SVG->init();
+    }
+
+    public function beforeEach()
+    {
+        global $transients;
+        $transients = [];
     }
 
     public function testLib()
     {
-        $lib = $this->SVG->lib;
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $SVG->init();
+        $lib = $SVG->lib;
         // Loaded from filesystem
         $this->assertArrayHasKey('arrow', $lib);
-        // $this->assertStringEqualsFile(__DIR__ . '/fixtures/svg/arrow.svg', $lib['arrow']->svg . "\n");
     }
 
     public function testInit_transient()
     {
         global $get_transient;
-        $get_transient = [];
 
-        $this->SVG->is_debug = false;
-        $this->SVG->init();
+        $SVG = new SVG(__DIR__ . '/fixtures/svg2');
+        // $SVG->transient = 'test';
+        $get_transient[$SVG->transient] = ['hello'];
 
-        $this->assertArrayHasKey('_from_transient', $this->SVG->lib);
-        $this->assertArrayHasKey('_processing_time', $this->SVG->lib);
-        $this->assertTrue($this->SVG->lib['_from_transient']);
+        $SVG->WP_DEBUG = false;
+        $SVG->init();
+
+        $this->assertArrayHasKey('_from_transient', $SVG->lib);
+        $this->assertArrayHasKey('_processing_time', $SVG->lib);
+        $this->assertTrue($SVG->lib['_from_transient']);
     }
 
     public function testEmbed()
     {
-        $arrow = $this->SVG->embed('arrow');
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+
+        $arrow = $SVG->embed('arrow');
         $this->assertStringContainsString('<svg', $arrow);
 
         // $nope = $this->SVG->embed('nope');
@@ -79,7 +92,7 @@ final class SVGTest extends TestCase
             ->onlyMethods(['fetch'])
             ->getMock();
 
-        $svg->is_debug = true;
+        $svg->WP_DEBUG = true;
         $err_message = 'PHPUnit Error';
         $err = new \WP_ERROR(123, $err_message);
         $svg->method('fetch')->willReturn($err);
@@ -104,20 +117,6 @@ final class SVGTest extends TestCase
         /** @var \IdeasOnPurpose\WP\SVG $svg */
         $svg->getSVG('arrow');
     }
-
-    // public function testUse()
-    // {
-    //     $this->expectOutputRegex('/<!-- SVG Lib Error/');
-    //     $arrow_svg = $this->SVG->use('arrow.svg');
-    //     $nope = $this->SVG->use('not-a-file');
-    //     $inUse = $this->SVG->inUse;
-    //     $actual = ob_get_contents();
-
-    //     $this->assertStringContainsString('<!-- SVG Lib Error', $actual);
-    //     $this->assertStringContainsStringIgnoringCase('use xlink:href', $arrow_svg);
-    //     $this->assertNull($nope);
-    //     $this->assertCount(1, $inUse);
-    // }
 
     /**
      * This test confirms that the original implementation
@@ -144,8 +143,11 @@ final class SVGTest extends TestCase
 
     public function testDebug()
     {
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $SVG->init();
+
         $this->expectOutputRegex('/<div/');
-        $lib = $this->SVG->debug();
+        $lib = $SVG->debug();
         $this->assertGreaterThan(0, $lib);
 
         $actual = ob_get_contents();
@@ -176,17 +178,22 @@ final class SVGTest extends TestCase
 
     public function testNormalizeEmptyKey(): void
     {
-        $actual = $this->SVG->normalizeKey('');
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $actual = $SVG->normalizeKey('');
         $this->assertEmpty($actual);
     }
+
     public function testNormalizeNullKey(): void
     {
-        $actual = $this->SVG->normalizeKey(false);
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $actual = $SVG->normalizeKey(false);
         $this->assertEmpty($actual);
     }
+
     public function testNormalizeFalseKey(): void
     {
-        $actual = $this->SVG->normalizeKey(null);
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $actual = $SVG->normalizeKey(null);
         $this->assertEmpty($actual);
     }
 
@@ -195,12 +202,12 @@ final class SVGTest extends TestCase
      */
     public function testValidateAttributes_good(): void
     {
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+
         $classList = 'red green blue';
         $attributes = ['width' => 'AUTO', 'height' => 123, 'class' => $classList];
 
-        // $req = new WP_REST_Request($params);
-
-        $actual = $this->SVG->validateAttributes($attributes);
+        $actual = $SVG->validateAttributes($attributes);
 
         $this->assertArrayHasKey('width', $actual);
         $this->assertArrayHasKey('height', $actual);
@@ -209,29 +216,6 @@ final class SVGTest extends TestCase
         $this->assertEquals($classList, $actual['class']);
     }
 
-    // public function testStaticSVGs()
-    // {
-    //     /**
-    //      * This file contains the StaticSVG class which extends SVG
-    //      * and registers a public static $arrowStatic variable which contains
-    //      * a raw SVG string.
-    //      *
-    //      * This is how the library worked initially, and has been marked
-    //      * deprecated. Tests are to make sure it doesn't break on existing
-    //      * legacy code.
-    //      */
-    //     require 'fixtures/StaticSVG.php';
-
-    //     $static = new StaticSVG(__DIR__ . '/fixtures/svg');
-    //     $this->expectOutputRegex('/Loading SVGs from static child classes is deprecated/');
-    //     $static->init();
-
-    //     $svg = $static->arrowStatic;
-
-    //     $actual = $this->output();
-    //     $this->assertStringContainsString('<svg', $svg);
-    // }
-
     /**
      * Check that set_query_var is called when there are any SVGs in the library
      */
@@ -239,7 +223,10 @@ final class SVGTest extends TestCase
     {
         global $query_var;
 
-        $this->SVG->registerQueryVar();
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $SVG->init();
+
+        $SVG->registerQueryVar();
         $actual = array_pop($query_var);
 
         $this->assertEquals('SVG', $actual['key']);
@@ -253,47 +240,18 @@ final class SVGTest extends TestCase
         $this->assertNull($actual);
     }
 
-    // public function testCleanSvg()
-    // {
-    //     $this->expectOutputRegex('/<!-- SVG Lib Error/');
-    //     $actual = $this->SVG->cleanSvg('nope');
-    //     $this->assertNull($actual);
-    //     // $this->getActualOutput();
-    //     $expected = ob_get_contents();
-
-    //     // d('TEST', $expected);
-
-    //     $args = ['width' => 123];
-    //     $this->SVG->cleanSvg('arrow', $args);
-
-    //     $this->assertIsObject($this->SVG->lib['arrow']->_links);
-    //     $this->assertTrue(property_exists($this->SVG->lib['arrow']->_links, 'clean_json'));
-    //     // d($this->SVG->lib['arrow']);
-    // }
-
-    // public function testNormalizeSvg_error()
-    // {
-    //     $bad_svg = '<svg><g>';
-    //     $actual = $this->SVG->normalizeSvg($bad_svg);
-    //     // $this->SVG->lib['bad'] = (object) [
-    //     //     'src' => 'fake/file/path.svg',
-    //     //     'content' => (object) ['raw' => '<svg><g>'],
-    //     // ];
-    //     // $this->SVG->cleanSvg('bad');
-    //     // $this->assertIsObject($this->SVG->lib['arrow']->_links);
-    //     $this->assertTrue(property_exists($actual, 'errors'));
-    // }
-
     public function tesWrapSVG(): void
     {
-        $actual = $this->SVG->wrapSvg('', ['viewBox' => '3 4 5 6', 'class' => 'dog', 'width' => 44]);
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $actual = $SVG->wrapSvg('', ['viewBox' => '3 4 5 6', 'class' => 'dog', 'width' => 44]);
         $this->assertStringContainsString('<svg class="dog" width="44"', $actual);
         $this->assertStringContainsString('xmlns=', $actual);
         $this->assertStringContainsString('http://www.w3.org/2000/svg', $actual);
     }
     public function testWrapSVGWrongViewBoxCase(): void
     {
-        $actual = $this->SVG->wrapSvg('', ['VIEWBOX' => '3 4 5 6', 'id' => 'foo']);
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $actual = $SVG->wrapSvg('', ['VIEWBOX' => '3 4 5 6', 'id' => 'foo']);
         $this->assertStringNotContainsString('viewBox', $actual);
         $this->assertStringNotContainsString('VIEWBOX', $actual);
         $this->assertStringContainsString('id', $actual);
@@ -302,24 +260,31 @@ final class SVGTest extends TestCase
 
     public function testWrapSVGExtraAttributes(): void
     {
-        $actual = $this->SVG->wrapSvg('', ['frog' => 'kermit', 'color' => 'green', 'width' => '55']);
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $actual = $SVG->wrapSvg('', ['frog' => 'kermit', 'color' => 'green', 'width' => '55']);
         $this->assertStringNotContainsString('frog', $actual);
         $this->assertStringNotContainsString('kermit', $actual);
         $this->assertStringNotContainsString('color', $actual);
         $this->assertStringNotContainsString('green', $actual);
         $this->assertStringContainsString('width', $actual);
+        // $this->assertStringContainsString('viewBox', $actual);
         $this->assertStringContainsString('http://www.w3.org/2000/svg', $actual);
     }
 
     public function testSvgOpenTagEnforceOrder(): void
     {
-        $actual = $this->SVG->wrapSvg('', [
+        $SVG = new SVG(__DIR__ . '/fixtures/svg');
+
+        $actual = $SVG->wrapSvg('', [
             'height' => 12,
             'viewBox' => '0 2 11 22',
             'class' => 'bar',
             'width' => '55',
             'id' => 'foo',
         ]);
-        $this->assertMatchesRegularExpression('/svg.*id.*class.*width.*height.*viewBox.*xmlns/', $actual);
+        $this->assertMatchesRegularExpression(
+            '/svg.*id.*class.*width.*height.*viewBox.*xmlns/',
+            $actual
+        );
     }
 }

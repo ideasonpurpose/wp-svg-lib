@@ -24,12 +24,15 @@ trait DumpSymbols
                 );
             }, $this->inUse);
             $symbols = implode("\n", $symbols);
-            printf("<svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>\n%s\n</svg>\n", $symbols);
+            printf(
+                "<svg xmlns='http://www.w3.org/2000/svg' style='display: none;'>\n%s\n</svg>\n",
+                $symbols
+            );
         } else {
             if (is_user_logged_in()) {
                 echo "<!-- NO SVGs IN USE -->\n";
 
-                if ($this->is_debug) {
+                if ($this->WP_DEBUG) {
                     $trace = array_map(fn($i) => $i['file'] . ':' . $i['line'], debug_backtrace());
                     $trace = implode("\n\t", $trace);
                     printf("<!-- SVG::dumpSymbols call stack:\n\t%s\n -->\n", $trace);

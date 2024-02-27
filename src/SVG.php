@@ -23,33 +23,29 @@ use Doctrine\Inflector\InflectorFactory;
 class SVG
 {
     use Deprecated\Directory;
-    use Deprecated\Get;
     use Deprecated\DumpSymbols;
-    // use Deprecated\LibFill;
+    use Deprecated\Get;
 
     public $lib = [];
 
     /**
-     * A placeholder for WP_DEBUG which can be mocked
+     * Placeholders for mocking
      */
-    public $is_debug = false;
-    /**
-     * A placeholder for the ABSPATH constant which can be mocked
-     */
-    public $abspath;
+    public $ABSPATH;
+    public $WP_DEBUG = false;
 
+    public $inUse;
     public $libDir;
-    public $transient;
+    public $rest_base;
     public $rest_namespace;
     public $rest_route;
-    public $rest_base;
-    public $inUse;
     public $shortcode;
+    public $transient;
 
     public function __construct($libDir = null)
     {
-        $this->is_debug = defined('WP_DEBUG') && WP_DEBUG;
-        $this->abspath = defined('ABSPATH') ? ABSPATH : false;
+        $this->ABSPATH = defined('ABSPATH') ? ABSPATH : '/';
+        $this->WP_DEBUG = defined('WP_DEBUG') && WP_DEBUG;
 
         $this->libDir = $libDir ?? get_template_directory() . '/dist/images/svg';
 
@@ -98,14 +94,13 @@ class SVG
         /**
          * Disable transients when WP_DEBUG is true
          */
-        if ($this->is_debug === true) {
+        if ($this->WP_DEBUG === true) {
             $this->lib = false;
         }
 
         if ($this->lib === false) {
             $this->lib = [];
             $this->loadFromDirectory($this->libDir);
-            // $this->libfill();
             $this->lib['_from_transient'] = false;
 
             set_transient($this->transient, $this->lib, 12 * HOUR_IN_SECONDS);
@@ -147,7 +142,7 @@ class SVG
 
                 $svg = $this->normalizeSvg(file_get_contents($file->getRealPath()));
 
-                $rootRelPath = str_replace($this->abspath, '', $file->getRealPath());
+                $rootRelPath = str_replace($this->ABSPATH, '', $file->getRealPath());
                 $srcUrl = site_url($rootRelPath);
 
                 /**
@@ -177,8 +172,6 @@ class SVG
      */
     public function rewrapSvg($svg, $attributes = [])
     {
-        // ~d($attributes);
-        // d($svg);
         $esc_atts = array_map('urlencode', $attributes);
         $svg->_links->self = add_query_arg($esc_atts, $svg->_links->self);
         $svg->_links->svg = add_query_arg($esc_atts, $svg->_links->svg);
@@ -278,7 +271,9 @@ class SVG
 
         $width = array_key_exists('width', $xml_attributes) ? $xml_attributes['width'] : null;
         $height = array_key_exists('height', $xml_attributes) ? $xml_attributes['height'] : null;
-        $viewBox = array_key_exists('viewbox', $xml_attributes) ? explode(' ', $xml_attributes['viewbox']) : [];
+        $viewBox = array_key_exists('viewbox', $xml_attributes)
+            ? explode(' ', $xml_attributes['viewbox'])
+            : [];
 
         $attributes = [];
 
@@ -440,7 +435,9 @@ class SVG
     {
         $svg = $this->fetch($key, $attributes);
         if (is_WP_Error($svg)) {
-            $template = $this->is_debug ? '<text y="20" fill="red">Error: %s</text>' : '"\n<!-- Error: %s -->\n"';
+            $template = $this->WP_DEBUG
+                ? '<text y="20" fill="red">Error: %s</text>'
+                : '"\n<!-- Error: %s -->\n"';
             $err = sprintf($template, $svg->get_error_message());
             return $this->wrapSvg($err);
         }
@@ -459,7 +456,10 @@ class SVG
 
         if ($this->hasSVG($name)) {
             array_push($this->inUse, $name);
-            return sprintf('<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>', $name);
+            return sprintf(
+                '<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>',
+                $name
+            );
         }
     }
 
@@ -529,13 +529,13 @@ class SVG
     }
 
     /**
-     * Check for $this->is_debug and remove private underscore-prefixed keys when false
+     * Check for $this->WP_DEBUG and remove private underscore-prefixed keys when false
      * @param object $svg
      * @return object
      */
     public function removePrivateKeys($svg)
     {
-        if ($this->is_debug) {
+        if ($this->WP_DEBUG) {
             return $svg;
         }
         $clean = (object) [];

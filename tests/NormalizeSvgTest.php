@@ -28,6 +28,15 @@ final class NormalizeSvgTest extends TestCase
         $this->assertEquals($expected, $actual->attributes['viewBox']);
     }
 
+    public function testNoViewBox()
+    {
+        $w = 50;
+        $h = 40;
+        $actual = $this->SVG->normalizeSvg("<svg height='$h' width='$w'></svg>");
+        $expected = "0 0 $w $h";
+        $this->assertEquals($expected, $actual->attributes['viewBox']);
+    }
+
     public function testBadSVG()
     {
         $actual = $this->SVG->normalizeSvg('not xml');

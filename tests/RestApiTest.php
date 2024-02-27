@@ -63,10 +63,7 @@ final class RestApiTest extends TestCase
             ->onlyMethods(['returnSvgFile'])
             ->getMock();
 
-        $mockSvg
-            ->expects($this->exactly(2))
-            ->method('returnSvgFile')
-            ->willReturnArgument(0);
+        $mockSvg->expects($this->exactly(2))->method('returnSvgFile')->willReturnArgument(0);
 
         /**
          * $args['svg'] is null
@@ -139,10 +136,7 @@ final class RestApiTest extends TestCase
             ->onlyMethods(['exit'])
             ->getMock();
 
-        $mockSvg
-            ->expects($this->once())
-            ->method('exit')
-            ->willReturnArgument(0);
+        $mockSvg->expects($this->once())->method('exit')->willReturnArgument(0);
 
         // $req = new WP_REST_Request(['name' => 'arrow']);
         $mockSvg->returnSvgFile('arrow');
@@ -194,7 +188,7 @@ final class RestApiTest extends TestCase
     public function testResponseHas_srcPath(): void
     {
         $req = new WP_REST_Request(['name' => 'arrow']);
-        $this->SVG->is_debug = true;
+        $this->SVG->WP_DEBUG = true;
         $actual = $this->SVG->restResponse($req);
         $this->assertObjectHasProperty('__srcPath', $actual);
     }
@@ -205,7 +199,7 @@ final class RestApiTest extends TestCase
     public function testResponseHasNo_srcPath(): void
     {
         $req = new WP_REST_Request(['name' => 'arrow']);
-        $this->SVG->is_debug = false;
+        $this->SVG->WP_DEBUG = false;
         $actual = $this->SVG->restResponse($req);
         $this->assertObjectNotHasProperty('__srcPath', $actual);
     }

@@ -44,7 +44,7 @@ final class DeprecatedTest extends TestCase
         global $is_user_logged_in;
 
         $is_user_logged_in = true;
-        $this->SVG->is_debug = false;
+        $this->SVG->WP_DEBUG = false;
 
         $this->expectOutputRegex('/<!-- NO SVGs IN USE/');
         $this->SVG->dumpSymbols();
@@ -63,7 +63,7 @@ final class DeprecatedTest extends TestCase
         global $is_user_logged_in;
 
         $is_user_logged_in = true;
-        $this->SVG->is_debug = true;
+        $this->SVG->WP_DEBUG = true;
 
         $this->expectOutputRegex('/<!-- NO SVGs IN USE/');
         $this->SVG->dumpSymbols();
