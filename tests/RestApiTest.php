@@ -117,8 +117,6 @@ final class RestApiTest extends TestCase
     {
         $attributes = ['width' => '2d20', 'height' => -25];
 
-        // $req = new WP_REST_Request($params);
-
         $actual = $this->SVG->validateAttributes($attributes);
 
         $this->assertArrayNotHasKey('width', $actual);

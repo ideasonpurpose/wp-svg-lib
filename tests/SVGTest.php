@@ -4,7 +4,6 @@ namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
 use IdeasOnPurpose\WP\Test;
-use stdClass;
 
 Test\Stubs::init();
 /**
@@ -48,7 +47,6 @@ final class SVGTest extends TestCase
         global $get_transient;
 
         $SVG = new SVG(__DIR__ . '/fixtures/svg2');
-        // $SVG->transient = 'test';
         $get_transient[$SVG->transient] = ['hello'];
 
         $SVG->WP_DEBUG = false;

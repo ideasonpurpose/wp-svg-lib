@@ -44,7 +44,7 @@ class SVG
 
     public function __construct($libDir = null)
     {
-        $this->ABSPATH = defined('ABSPATH') ? ABSPATH : '/';
+        $this->ABSPATH = defined('ABSPATH') ? ABSPATH : getcwd();
         $this->WP_DEBUG = defined('WP_DEBUG') && WP_DEBUG;
 
         $this->libDir = $libDir ?? get_template_directory() . '/dist/images/svg';
