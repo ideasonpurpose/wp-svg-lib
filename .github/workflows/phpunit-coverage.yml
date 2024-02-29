@@ -7,11 +7,17 @@ on:
     branches: [master]
 
 jobs:
-  build:
-    runs-on: ubuntu-20.04
+  test:
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v2
+      # https://github.com/marketplace/actions/checkout
+      - uses: actions/checkout@v4
+
+      - name: Global install PHPUnit & update $PATH
+        run: |
+          composer global require phpunit/phpunit --prefer-dist
+          echo "$HOME/.composer/vendor/bin" >> $GITHUB_PATH
 
       - name: Validate composer.json and composer.lock
         run: composer validate
@@ -22,22 +28,24 @@ jobs:
       - name: Run test suite
         env:
           XDEBUG_MODE: coverage
-        run: vendor/bin/phpunit
+        run: phpunit
 
       # The Coveralls repo token is found on the project's Settings page
+      # https://github.com/php-coveralls/php-coveralls
       - name: Upload to Coveralls
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
           COVERALLS_RUN_LOCALLY: yes
         run: |
-          composer require 'php-coveralls/php-coveralls:2.5.2'
+          composer require 'php-coveralls/php-coveralls:2.7.0'
           vendor/bin/php-coveralls \
             --coverage_clover ./coverage.xml \
             --json_path ./coveralls-upload.json \
             --verbose
 
+      # https://github.com/codecov/codecov-action
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: false
           files: ./coverage.xml
@@ -46,8 +54,9 @@ jobs:
       # The Code Climate Test Coverage Reporter ID can be found by visiting the project's
       # Repo Settings pane, click Test Coverage in the left sidebar. Find the ID in the
       # second section.
+      # https://github.com/paambaati/codeclimate-action
       - name: Code Climate coverage
-        uses: paambaati/codeclimate-action@v3.0.0
+        uses: paambaati/codeclimate-action@v5
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         with:
