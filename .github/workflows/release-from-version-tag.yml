@@ -6,11 +6,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: Build Release
 
     steps:
-      - uses: actions/checkout@v2
+      # https://github.com/marketplace/actions/checkout
+      - uses: actions/checkout@v4
 
       - name: Set up REPO and TAG environment vars
         run: |
