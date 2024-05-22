@@ -25,12 +25,20 @@ final class SVGTest extends TestCase
     {
         // $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
         // $this->SVG->init();
+
+        // Moved from the un-called beforeEach,
+        //  but these don't appear to have any effect?
+        global $transients;
+        $transients = [];
+
     }
 
     public function beforeEach()
     {
-        global $transients;
-        $transients = [];
+        // NOTE: beforeEach isn't in PHPUnit?
+        //       moving this up into setUp
+        // global $transients;
+        // $transients = [];
     }
 
     public function testLib()
