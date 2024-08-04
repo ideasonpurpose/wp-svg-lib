@@ -366,9 +366,10 @@ class SVG
     }
 
     /**
-     * Check if SVG exists and prints debugging messages if missing
+     * Check if SVG exists
+     * TODO: Naming?
      */
-    private function hasSVG($name)
+    public function hasSVG($name)
     {
         $key = $this->normalizeKey($name);
 
