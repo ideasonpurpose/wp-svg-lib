@@ -16,11 +16,11 @@
   },
   "prettier": "@ideasonpurpose/prettier-config",
   "devDependencies": {
-    "@ideasonpurpose/prettier-config": "^0.0.4",
+    "@ideasonpurpose/prettier-config": "^0.0.6",
     "@prettier/plugin-php": "^0.22.2",
     "auto-changelog": "^2.4.0",
-    "prettier": "^3.2.5",
-    "version-everything": "^0.11.0"
+    "prettier": "^3.3.3",
+    "version-everything": "^0.11.3"
   },
   "auto-changelog": {
     "package": true,
