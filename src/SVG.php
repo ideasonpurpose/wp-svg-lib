@@ -25,6 +25,8 @@ class SVG
     use Deprecated\Directory;
     use Deprecated\DumpSymbols;
     use Deprecated\Get;
+    use Deprecated\GetSVG;
+    use Deprecated\HasSVG;
 
     public $lib = [];
 
@@ -366,10 +368,11 @@ class SVG
     }
 
     /**
-     * Check if SVG exists
-     * TODO: Naming?
+     * Check whether an SVG has been registered to the library
+     * @return boolean True if the SVG exists
      */
-    public function hasSVG($name)
+
+    public function exists($name)
     {
         $key = $this->normalizeKey($name);
 
@@ -385,7 +388,7 @@ class SVG
     }
 
     /**
-     * TODO: Alternate name, getSVG(). Pi
+     * TODO: Alternate name, getSVG().
      * @param string $key
      * @param array $attributes
      * @return object | WP_Error
@@ -394,11 +397,10 @@ class SVG
     {
         $name = $this->normalizeKey($key);
 
-        if ($name && $this->hasSVG($name)) {
+        if ($name && $this->exists($name)) {
             $svg = $this->lib[$name];
             $svg = $this->removePrivateKeys($svg);
 
-            // $svg->name = $name;
             $atts = $this->validateAttributes($attributes);
             $svg = $this->rewrapSvg($svg, $atts);
             return $svg;
@@ -407,18 +409,6 @@ class SVG
         // TODO: What happens if there's no entry for this name? -- do this:
         return new \WP_Error(404, 'Invalid SVG identifier', ['status' => 404]);
         // When to suppress errors? When to show? REST should always show errors
-    }
-
-    /**
-     * Alias for $this->fetch()
-     * TODO: Pick a name
-     * @param mixed $key
-     * @param mixed $attributes
-     * @return void
-     */
-    public function getSVG($key, $attributes = [])
-    {
-        return $this->fetch($key, $attributes);
     }
 
     /**
@@ -455,7 +445,7 @@ class SVG
     {
         $name = $this->normalizeKey($key);
 
-        if ($this->hasSVG($name)) {
+        if ($this->exists($name)) {
             array_push($this->inUse, $name);
             return sprintf(
                 '<svg class="%1$s"><use xlink:href="#%1$s" href="#%1$s" /></svg>',
