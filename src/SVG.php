@@ -387,6 +387,12 @@ class SVG
         return $this->embed($name);
     }
 
+    public function __call($name, $arguments)
+    {
+        $attributes = $arguments[0] ?? [];
+        return $this->fetch($name, $attributes);
+    }
+
     /**
      * TODO: Alternate name, getSVG().
      * @param string $key
@@ -417,6 +423,9 @@ class SVG
      *
      * NOTE: The magic __get method can only accept a single argument, so embed must be
      * called directly if args are being used.
+     *
+     * This is now mostly just a wrapper for the fetch method but returns the svg
+     * property instead of the entire SVG object.
      *
      * @param string $key
      * @param array $attributes

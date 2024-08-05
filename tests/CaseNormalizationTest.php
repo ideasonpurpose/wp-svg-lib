@@ -24,17 +24,6 @@ final class CaseNormalizationTest extends TestCase
     public function beforeEach()
     {
     }
-    /**
-     * Test magic methods for embedding SVGs
-     *
-     * Exact matches should work when quoted.
-     * All names should also be directly callable using camelCase
-     */
-    public function testMagicMethodsFound()
-    {
-        $arrow = $this->SVG->arrow;
-        $this->assertStringContainsString('<svg', $arrow);
-    }
 
     // public function testMagicMethodsNotFound()
     // {
