@@ -87,4 +87,16 @@ final class DeprecatedTest extends TestCase
         $this->assertStringContainsString('display: none', $actual);
         $this->assertStringContainsString('<svg ', $actual);
     }
+
+    public function test_hasSVG()
+    {
+        $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
+            ->disableOriginalConstructor()
+            ->onlyMethods(['exists'])
+            ->getMock();
+
+        $svg->expects($this->once())->method('exists')->with($this->equalTo('arrow'));
+
+        $svg->hasSVG('arrow');
+    }
 }

@@ -43,11 +43,11 @@ final class MagicMethodTest extends TestCase
 
         $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->disableOriginalConstructor()
-            ->onlyMethods(['fetch'])
+            ->onlyMethods(['embed'])
             ->getMock();
 
         $svg->expects($this->once())
-            ->method('fetch')
+            ->method('embed')
             ->with($this->equalTo('arrow'), $this->equalTo($widthArg));
 
         $svg->arrow($widthArg);
@@ -59,11 +59,11 @@ final class MagicMethodTest extends TestCase
     {
         $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->disableOriginalConstructor()
-            ->onlyMethods(['fetch'])
+            ->onlyMethods(['embed'])
             ->getMock();
 
         $svg->expects($this->once())
-            ->method('fetch')
+            ->method('embed')
             ->with($this->equalTo('arrow'), $this->equalTo([]));
 
         $svg->arrow();

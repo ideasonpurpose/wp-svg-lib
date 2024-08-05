@@ -390,7 +390,7 @@ class SVG
     public function __call($name, $arguments)
     {
         $attributes = $arguments[0] ?? [];
-        return $this->fetch($name, $attributes);
+        return $this->embed($name, $attributes);
     }
 
     /**
