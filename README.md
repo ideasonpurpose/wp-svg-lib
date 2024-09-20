@@ -2,7 +2,7 @@
 
 #### Version 3.0.0
 
-A simple library to assist with inlining and re-using SVG elements on WordPress sites.
+A powerful utility library for including SVG files in WordPress sites.
 
 [![Packagist](https://badgen.net/packagist/v/ideasonpurpose/wp-svg-lib)](https://packagist.org/packages/ideasonpurpose/wp-svg-lib)
 [![codecov](https://codecov.io/gh/ideasonpurpose/wp-svg-lib/branch/master/graph/badge.svg)](https://codecov.io/gh/ideasonpurpose/wp-svg-lib)
@@ -13,6 +13,8 @@ A simple library to assist with inlining and re-using SVG elements on WordPress 
 ## What it does
 
 This helper library reads SVG files from a directory then provides helper functions for embedding the files into WordPress templates. Files can be embedded inline or converted to symbols to help conserve bandwidth.
+
+The library also enables SVG shortcodes, which can directly place SVGs into the block editor. 
 
 _**Note:** Version 2.0.0 changed the namespace from `IdeasOnPurpose\SVG` to `IdeasOnPurpose\WP\SVG`._
 
