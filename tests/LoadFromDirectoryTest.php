@@ -3,13 +3,13 @@
 namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+
 use IdeasOnPurpose\WP\Test;
 
 Test\Stubs::init();
 
-/**
- * @covers \IdeasOnPurpose\WP\SVG
- */
+#[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
 final class LoadFromDirectoryTest extends TestCase
 {
     public $SVG;
@@ -19,6 +19,8 @@ final class LoadFromDirectoryTest extends TestCase
         $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
         $this->SVG->init();
         $this->SVG->loadFromDirectory(__DIR__ . '/fixtures/svg2');
+
+        $this->assertNotEmpty($this->SVG->lib);
 
         $svg = $this->SVG->second;
         $this->assertStringContainsString('<svg', $svg);
@@ -30,7 +32,7 @@ final class LoadFromDirectoryTest extends TestCase
     public function testLoadFromDirectory_no_directory()
     {
         $this->SVG = new SVG();
-        $actual = $this->SVG->loadFromDirectory('not-a-directory');
-        $this->assertNull($actual);
+        $this->SVG->loadFromDirectory('not-a-directory');
+        $this->assertEmpty($this->SVG->lib);
     }
 }

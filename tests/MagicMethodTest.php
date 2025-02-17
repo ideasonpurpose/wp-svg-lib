@@ -1,15 +1,13 @@
 <?php namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+
 use IdeasOnPurpose\WP\Test;
 
 Test\Stubs::init();
-/**
 
-
-/**
- * @covers \IdeasOnPurpose\WP\SVG
- */
+#[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
 final class MagicMethodTest extends TestCase
 {
     public $SVG;
@@ -41,6 +39,7 @@ final class MagicMethodTest extends TestCase
     {
         $widthArg = ['width' => 25];
 
+        /** @var SVG|MockObject $svg */
         $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->disableOriginalConstructor()
             ->onlyMethods(['embed'])
@@ -57,6 +56,7 @@ final class MagicMethodTest extends TestCase
 
     public function testMagicCallNoAttributes()
     {
+        /** @var SVG|MockObject $svg */
         $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->disableOriginalConstructor()
             ->onlyMethods(['embed'])

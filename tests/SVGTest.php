@@ -3,20 +3,13 @@
 namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+
 use IdeasOnPurpose\WP\Test;
 
 Test\Stubs::init();
-/**
 
- * Mock error_log
- */
-function error_log($err)
-{
-}
-
-/**
- * @covers \IdeasOnPurpose\WP\SVG
- */
+#[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
 final class SVGTest extends TestCase
 {
     // public $SVG;
@@ -93,6 +86,7 @@ final class SVGTest extends TestCase
 
     public function testEmbedError()
     {
+        /** @var SVG|MockObject $svg */
         $svg = $this->getMockBuilder(\IdeasOnPurpose\WP\SVG::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['fetch'])

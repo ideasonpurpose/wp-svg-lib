@@ -3,15 +3,13 @@
 namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+
 use IdeasOnPurpose\WP\Test;
 
 Test\Stubs::init();
-/**
 
-
-/**
- * @covers \IdeasOnPurpose\WP\SVG
- */
+#[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
 final class ShortcodeTest extends TestCase
 {
     public $SVG;
@@ -33,10 +31,7 @@ final class ShortcodeTest extends TestCase
 
     public function testEmbedScaled()
     {
-        // $stub = $this->createStub(SVG::class);
-
-        // $stub->method('embed')->willReturnArgument(1);
-
+        /** @var SVG|MockObject $mockSvg */
         $mockSvg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->onlyMethods(['embed'])
             ->getMock();
@@ -57,7 +52,7 @@ final class ShortcodeTest extends TestCase
         // }';
         // $this->SVG->lib = (array) json_decode($lib, false);
 
-        $args = ['arrow' , 'height' => '40', 'width' => 'auto'];
+        $args = ['arrow', 'height' => '40', 'width' => 'auto'];
         $expected = ['height' => 40, 'width' => 'auto'];
         $actual = $mockSvg->svgShortcode($args);
 

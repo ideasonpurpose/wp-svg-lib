@@ -3,13 +3,13 @@
 namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+
 use IdeasOnPurpose\WP\Test;
 
 Test\Stubs::init();
 
-/**
- * @covers \IdeasOnPurpose\WP\SVG
- */
+#[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
 final class CaseNormalizationTest extends TestCase
 {
     public $SVG;

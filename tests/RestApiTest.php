@@ -3,16 +3,16 @@
 namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+
 use IdeasOnPurpose\WP\Test;
 use WP_REST_Request;
 
 Test\Stubs::init();
-/**
 
 
-/**
- * @covers \IdeasOnPurpose\WP\SVG
- */
+#[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
 final class RestApiTest extends TestCase
 {
     public $SVG;
@@ -58,6 +58,7 @@ final class RestApiTest extends TestCase
 
     public function testReturnsSVGFile(): void
     {
+        /** @var SVG|MockObject $mockSvg */
         $mockSvg = $this->getMockBuilder(\IdeasOnPurpose\WP\SVG::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['returnSvgFile'])
@@ -124,12 +125,13 @@ final class RestApiTest extends TestCase
     }
 
     /**
-     * @runInSeparateProcess
      * Run in separate process to suppress "headers already sent" error
      */
+    #[RunInSeparateProcess]
     public function testReturnSvgFile(): void
     {
-        $mockSvg = $this->getMockBuilder(\IdeasOnPurpose\WP\SVG::class)
+          /** @var SVG|MockObject $mockSvg */
+                $mockSvg = $this->getMockBuilder(\IdeasOnPurpose\WP\SVG::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['exit'])
             ->getMock();

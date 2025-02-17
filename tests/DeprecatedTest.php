@@ -3,18 +3,16 @@
 namespace IdeasOnPurpose\WP;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+
 use IdeasOnPurpose\WP\Test;
 
 Test\Stubs::init();
-/**
 
-
-/**
- * @covers \IdeasOnPurpose\WP\SVG
- * @covers \IdeasOnPurpose\WP\Deprecated\Directory
- * @covers \IdeasOnPurpose\WP\Deprecated\DumpSymbols
- * @covers \IdeasOnPurpose\WP\Deprecated\Get
- */
+#[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
+#[CoversClass(\IdeasOnPurpose\WP\Deprecated\Directory::class)]
+#[CoversClass(\IdeasOnPurpose\WP\Deprecated\DumpSymbols::class)]
+#[CoversClass(\IdeasOnPurpose\WP\Deprecated\Get::class)]
 final class DeprecatedTest extends TestCase
 {
     public $SVG;
@@ -90,6 +88,7 @@ final class DeprecatedTest extends TestCase
 
     public function test_hasSVG()
     {
+        /** @var SVG|MockObject $svg */
         $svg = $this->getMockBuilder('\IdeasOnPurpose\WP\SVG')
             ->disableOriginalConstructor()
             ->onlyMethods(['exists'])
