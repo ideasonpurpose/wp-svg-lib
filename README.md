@@ -1,6 +1,6 @@
 # wp-svg-lib
 
-#### Version 3.0.0
+#### Version 3.1.0
 
 A powerful utility library for including SVG files in WordPress sites.
 
