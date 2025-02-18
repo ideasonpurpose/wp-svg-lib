@@ -1,9 +1,8 @@
 services:
-  # Utility service for running composer commands. Useful for adding tools from packagist
-  # Image from: https://hub.docker.com/_/composer
+  # Utility service for running composer, provides a local volume for storing access tokens
+  # https://hub.docker.com/_/composer
   composer:
     image: composer:2.8
-    profiles: ["utility"]
     user: "${UID:-1000}:${GID:-1000}"
     environment:
       COMPOSER_HOME: /.composer
