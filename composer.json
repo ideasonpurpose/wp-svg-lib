@@ -18,7 +18,7 @@
     "ideasonpurpose/wp-test-stubs": "dev-main@dev",
     "php-stubs/acf-pro-stubs": "dev-master",
     "php-stubs/wordpress-stubs": "^6",
-    "phpunit/phpunit": "^10"
+    "phpunit/phpunit": "^11.5"
   },
   "require": {
     "doctrine/inflector": "^2.0"
