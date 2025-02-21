@@ -10,9 +10,6 @@ use IdeasOnPurpose\WP\Test;
 Test\Stubs::init();
 
 #[CoversClass(\IdeasOnPurpose\WP\SVG::class)]
-#[CoversClass(\IdeasOnPurpose\WP\Deprecated\Directory::class)]
-#[CoversClass(\IdeasOnPurpose\WP\Deprecated\DumpSymbols::class)]
-#[CoversClass(\IdeasOnPurpose\WP\Deprecated\Get::class)]
 final class DeprecatedTest extends TestCase
 {
     public $SVG;
