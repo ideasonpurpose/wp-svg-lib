@@ -14,6 +14,6 @@ services:
   # https://hub.docker.com/r/ideasonpurpose/phpunit-watch
   test:
     # image: ideasonpurpose/phpunit-watch:dev
-    image: ideasonpurpose/phpunit-watch:1.4
+    image: ideasonpurpose/phpunit-watch:2.0
     volumes:
       - ./:/app
