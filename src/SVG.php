@@ -1,4 +1,5 @@
 <?php
+
 namespace IdeasOnPurpose\WP;
 
 use Doctrine\Inflector\InflectorFactory;
@@ -435,11 +436,11 @@ class SVG
     {
         $svg = $this->fetch($key, $attributes);
         if (is_WP_Error($svg)) {
-            $template = $this->WP_DEBUG
-                ? '<text y="20" fill="red">Error: %s</text>'
-                : '"\n<!-- Error: %s -->\n"';
-            $err = sprintf($template, $svg->get_error_message());
-            return $this->wrapSvg($err);
+            if ($this->WP_DEBUG) {
+                throw new \Error($svg->get_error_message()); // throw an error
+            } else {
+                return $this->wrapSvg(sprintf('<!-- Error: %s -->', $svg->get_error_message()));
+            }
         }
         return $svg->svg;
     }

@@ -23,7 +23,6 @@ final class SVGTest extends TestCase
         //  but these don't appear to have any effect?
         global $transients;
         $transients = [];
-
     }
 
     public function beforeEach()
@@ -61,6 +60,7 @@ final class SVGTest extends TestCase
     public function testEmbed()
     {
         $SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $SVG->init();
 
         $arrow = $SVG->embed('arrow');
         $this->assertStringContainsString('<svg', $arrow);
@@ -94,12 +94,15 @@ final class SVGTest extends TestCase
 
         $svg->WP_DEBUG = true;
         $err_message = 'PHPUnit Error';
-        $err = new \WP_ERROR(123, $err_message);
+        $err = new \WP_Error(123, $err_message);
+
         $svg->method('fetch')->willReturn($err);
 
-        $actual = $svg->embed('mocked');
-        $this->assertStringContainsString($err_message, $actual);
-        $this->assertStringContainsString('<svg', $actual);
+        // Tell PHPUnit to expect an Error exception
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage($err_message);
+
+        $svg->embed('mocked');  // This will throw, so no need to assert on $actual
     }
 
     /**

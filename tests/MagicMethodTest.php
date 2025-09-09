@@ -14,7 +14,8 @@ final class MagicMethodTest extends TestCase
 
     public function setUp(): void
     {
-        $this->SVG = new SVG();
+        $this->SVG = new SVG(__DIR__ . '/fixtures/svg');
+        $this->SVG->init();
     }
 
     /**
